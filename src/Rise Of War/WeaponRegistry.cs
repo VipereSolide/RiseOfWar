@@ -55,53 +55,47 @@ namespace RiseOfWar
             TT33,
             NagantM1895,
         }
-        
-        private static string[] _weaponNames = new string[]
-        {
-            "GREASER",
-            ".357 CONDER",
-            "HMG",
-            "PATRIOT",
-            "PATRIOT GL",
-            "PATRIOT TAC",
-            "QUICKSILVER",
-            "RK-44",
-            "SIGNAL DMR",
-            "SL-DEFENDER",
-            "M1 GARRET",
-            "RECON LRR",
-            "76 EAGLE",
-            "AUTOMATICO AKIMBO",
-            "BUNDLE O' BUSS",
-            "S-IND7",
-            "C4",
-            "FRAG",
-            "SMOKE GRENADE",
-            "SPEARHEAD",
-            "THUMPER",
-            "SCALPEL",
-            "DAGGER",
-            "HYDRA",
-            "SLAM-R",
-            "AIR-HORN",
-            "AMMO BAG",
-            "MEDIC BAG",
-            "SABRE",
-            "SQUAD LEADER KIT",
-            "WRENCH",
-        };
+
+        private static List<string> _weaponNames = new List<string>();
         public static string[] weaponNames
         {
-            get { return _weaponNames; }
+            get { return _weaponNames.ToArray(); }
         }
+
+        public static void RegisterWeapon(string weaponName)
+        {
+            _weaponNames.Add(weaponName);
+            Plugin.Log($"WeaponRegistry: Successfully registered new weapon \"{weaponName}\"!");
+        }
+
         public static bool IsCustomWeapon(Weapon _weapon)
         {
-            if (_weapon == null || _weapon.name == "null")
+            if (_weapon == null)
             {
                 return false;
             }
 
-            return !weaponNames.ToList().Contains(_weapon.name);
+            return IsCustomWeapon(_weapon.name);
+        }
+
+        public static bool IsCustomWeapon(WeaponManager.WeaponEntry weaponEntry)
+        {
+            if (weaponEntry == null)
+            {
+                return false;
+            }
+
+            return IsCustomWeapon(weaponEntry.name);
+        }
+
+        public static bool IsCustomWeapon(string weaponName)
+        {
+            if (weaponName == "null")
+            {
+                return false;
+            }
+
+            return weaponNames.Contains(weaponName);
         }
     }
 }

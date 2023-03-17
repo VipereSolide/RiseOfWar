@@ -85,6 +85,7 @@ namespace RiseOfWar
             _instance.PatchAll(typeof(GameManagerPatcher));
             _instance.PatchAll(typeof(GameModeBasePatcher));
             _instance.PatchAll(typeof(DecalManagerPatcher));
+            _instance.PatchAll(typeof(WeaponManagerPatcher));
             _instance.PatchAll(typeof(PlayerFpParentPatcher));
             _instance.PatchAll(typeof(FpsActorControllerPatcher));
             _instance.PatchAll(typeof(FirstPersonControllerPatcher));

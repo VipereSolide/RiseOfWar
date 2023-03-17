@@ -49,7 +49,6 @@ namespace RiseOfWar
 
             if (__instance == null)
             {
-                Debug.Log("Lol what?");
                 return;
             }
 
@@ -62,7 +61,6 @@ namespace RiseOfWar
 
             try
             {
-                Debug.Log("helloww");
                 __instance.GetAdditionalData().modifications = new WeaponModifications();
                 __instance.GetAdditionalData().modifications.possibleModifications = ResourceManager.Instance.GetPossibleWeaponModifications(__instance.weaponProperties().name);
             
@@ -462,12 +460,12 @@ namespace RiseOfWar
 
                 if (__instance.aiming)
                 {
-                    Debug.Log(__instance.weaponProperties().aiming.GetFloat(WeaponXMLProperties.Aiming.CONE_EXPANSION_PER_SHOT_AIMED));
+                    Plugin.Log("WeaponPatcher: Received conefire expansion data = " + __instance.weaponProperties().aiming.GetFloat(WeaponXMLProperties.Aiming.CONE_EXPANSION_PER_SHOT_AIMED));
                     __instance.GetAdditionalData().currentConefire += __instance.weaponProperties().aiming.GetFloat(WeaponXMLProperties.Aiming.CONE_EXPANSION_PER_SHOT_AIMED);
                 }
                 else
                 {
-                    Debug.Log(__instance.weaponProperties().GetFloat(WeaponXMLProperties.CONE_EXPANSION_PER_SHOT));
+                    Plugin.Log("WeaponPatcher: Received conefire expansion data = " + __instance.weaponProperties().GetFloat(WeaponXMLProperties.CONE_EXPANSION_PER_SHOT));
                     __instance.GetAdditionalData().currentConefire += __instance.weaponProperties().GetFloat(WeaponXMLProperties.CONE_EXPANSION_PER_SHOT);
                 }
 

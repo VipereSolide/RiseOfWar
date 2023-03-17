@@ -113,6 +113,7 @@ namespace RiseOfWar
 
             string _dataFilePath = _path + "/data/weapon.xml";
             WeaponXMLProperties _properties = InterpretXMLFile(File.ReadAllText(_dataFilePath));
+            WeaponRegistry.RegisterWeapon(_properties.name);
 
             yield return null;
 
