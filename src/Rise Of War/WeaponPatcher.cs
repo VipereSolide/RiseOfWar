@@ -64,10 +64,10 @@ namespace RiseOfWar
                 __instance.GetAdditionalData().modifications = new WeaponModifications();
                 __instance.GetAdditionalData().modifications.possibleModifications = ResourceManager.Instance.GetPossibleWeaponModifications(__instance.weaponProperties().name);
             
+                PlayerUI.instance.SetAllWeaponModificationsActive(false);
+                
                 if (__instance.GetAdditionalData().modifications.possibleModifications.Count > 0)
                 {
-                    PlayerUI.instance.SetAllWeaponModificationsActive(false);
-                    
                     foreach(RegisteredWeaponModifications _mod in __instance.GetAdditionalData().modifications.possibleModifications)
                     {
                         PlayerUI.instance.SetWeaponModificationActive(_mod.modification.GetModificationType(), true);

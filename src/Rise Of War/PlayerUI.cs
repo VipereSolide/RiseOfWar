@@ -49,7 +49,7 @@ namespace RiseOfWar
 
             for (int _i = 0; _i < _healthImages.Length; _i++)
             {
-                _healthImages[_i].color = (_i < _count) ? new Color32(255,255,255,255) : GameConfiguration.playerUIAttachmentInactiveColor;
+                _healthImages[_i].color = (_i < _count) ? new Color32(255, 255, 255, 255) : GameConfiguration.playerUIAttachmentInactiveColor;
             }
         }
         public void SetPlayerStaminaAmount(float _stamina)
