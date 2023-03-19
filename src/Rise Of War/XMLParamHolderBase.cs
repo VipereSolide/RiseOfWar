@@ -13,7 +13,14 @@ namespace RiseOfWar
 
         private float ParseToFloat(string content)
         {
-            return float.Parse(content, System.Globalization.NumberStyles.Float);
+            try
+            {
+                return float.Parse(content);
+            }
+            catch
+            {
+                return float.Parse(content.Replace(".", ","));
+            }
         }
 
         public virtual bool HasParam(string name)

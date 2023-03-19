@@ -264,36 +264,42 @@ namespace RiseOfWar
                 return _weapon.configuration;
             }
 
-            if (_weapon.GetAdditionalData().modifications == null)
-            {
-                Plugin.LogWarning($"ResourceManager: Cannot get weapon configuration for weapon with null modifications ({_weapon.transform.name}).");
-                return _weapon.configuration;
-            }
-
             Weapon.Configuration _base = _weapon.configuration;
 
-            float _shortDamage = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DAMAGE);
-            _shortDamage += _weapon.GetAdditionalData().modifications.GetModifiedValue(_shortDamage, Modification.Modifications.SHORT_DAMAGE);
+            Debug.Log("Hello world");
+            Debug.Log(_weaponProperties.GetInt(WeaponXMLProperties.BULLETS));
+            Debug.Log(_weaponProperties.GetInt(WeaponXMLProperties.MAGAZINES));
 
-            float _shortDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DISTANCE);
-            _shortDistance += _weapon.GetAdditionalData().modifications.GetModifiedValue(_shortDistance, Modification.Modifications.SHORT_DISTANCE);
-
-            float _longDamage = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DAMAGE);
-            _longDamage += _weapon.GetAdditionalData().modifications.GetModifiedValue(_longDamage, Modification.Modifications.LONG_DAMAGE);
-
-            float _longDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DISTANCE);
-            _longDistance += _weapon.GetAdditionalData().modifications.GetModifiedValue(_longDistance, Modification.Modifications.LONG_DISTANCE);
-
-            float _velocity = _weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.VELOCITY);
-            _velocity += _weapon.GetAdditionalData().modifications.GetModifiedValue(_velocity, Modification.Modifications.VELOCITY);
-
-            float _roundsPerMinute = _weaponProperties.GetFloat(WeaponXMLProperties.ROUNDS_PER_MINUTE);
-            _roundsPerMinute += _weapon.GetAdditionalData().modifications.GetModifiedValue(_roundsPerMinute, Modification.Modifications.ROUNDS_PER_MINUTE);
-
-            _base.cooldown = 60f / _roundsPerMinute;
             _base.ammo = _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
             _base.maxAmmoPerReload = _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
             _base.spareAmmo = _weaponProperties.GetInt(WeaponXMLProperties.MAGAZINES) * _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
+
+            float _shortDamage = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DAMAGE);
+            float _shortDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DISTANCE);
+            float _longDamage = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DAMAGE);
+            float _longDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DISTANCE);
+            float _velocity = _weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.VELOCITY);
+            float _roundsPerMinute = _weaponProperties.GetFloat(WeaponXMLProperties.ROUNDS_PER_MINUTE);
+
+            if (_weapon.GetAdditionalData().modifications == null)
+            {
+                _weapon.GetAdditionalData().InitWeaponModifications();
+
+                if (_weapon.GetAdditionalData().modifications == null)
+                {
+                    Plugin.LogError($"ResourceManager: Cannot get weapon configuration for weapon with null modifications ({_weapon.transform.name}).");
+                    return _weapon.configuration;
+                }
+            }
+
+            _shortDamage += _weapon.GetAdditionalData().modifications.GetModifiedValue(_shortDamage, Modification.Modifications.SHORT_DAMAGE);
+            _shortDistance += _weapon.GetAdditionalData().modifications.GetModifiedValue(_shortDistance, Modification.Modifications.SHORT_DISTANCE);
+            _longDamage += _weapon.GetAdditionalData().modifications.GetModifiedValue(_longDamage, Modification.Modifications.LONG_DAMAGE);
+            _velocity += _weapon.GetAdditionalData().modifications.GetModifiedValue(_velocity, Modification.Modifications.VELOCITY);
+            _longDistance += _weapon.GetAdditionalData().modifications.GetModifiedValue(_longDistance, Modification.Modifications.LONG_DISTANCE);
+            _roundsPerMinute += _weapon.GetAdditionalData().modifications.GetModifiedValue(_roundsPerMinute, Modification.Modifications.ROUNDS_PER_MINUTE);
+
+            _base.cooldown = 60f / _roundsPerMinute;
 
             _base.projectile().configuration.inheritVelocity = true;
             _base.projectile().configuration.gravityMultiplier = 1;

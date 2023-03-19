@@ -80,11 +80,11 @@ namespace RiseOfWar
                     }
                     else if (_param.operation == Param.OPERATION_MULTIPLICATION)
                     {
-                        _output += baseValue * _value;
+                        _output = baseValue * _value - baseValue;
                     }
                     else if (_param.operation == Param.OPERATION_DIVISION)
                     {
-                        _output -= baseValue / _value;
+                        _output = baseValue / _value - baseValue;
                     }
                     else if (_param.operation == Param.OPERATION_ADDED_PERCENTAGE)
                     {

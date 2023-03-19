@@ -11,6 +11,12 @@ namespace RiseOfWar
     {
         private static readonly ConditionalWeakTable<Weapon, WeaponAdditionalData> _data = new ConditionalWeakTable<Weapon, WeaponAdditionalData>();
 
+        public static void ResetSetup(this Weapon weapon)
+        {
+            weapon.ammo = weapon.configuration.ammo;
+            weapon.spareAmmo = weapon.configuration.spareAmmo;
+        }
+
         public static void PlayFireSound(this Weapon _weapon)
         {
             if (_weapon == null)

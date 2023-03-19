@@ -53,6 +53,7 @@ namespace RiseOfWar
             }
 
             __instance.configuration = ResourceManager.Instance.GetConfigurationFromProperties(__instance, __instance.weaponProperties());
+            __instance.ResetSetup();
 
             if (__instance.weaponProperties() == null || __instance.GetAdditionalData() == null)
             {

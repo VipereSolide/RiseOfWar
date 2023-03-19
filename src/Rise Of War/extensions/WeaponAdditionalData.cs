@@ -16,22 +16,29 @@ namespace RiseOfWar
 
         public float currentConefire;
 
+        public void InitWeaponModifications()
+        {
+            modifications = new WeaponModifications();
+        }
+
         public WeaponAdditionalData()
         {
             aimingAnchor = null;
             isCustomWeapon = false;
-            modifications = new WeaponModifications();
+            InitWeaponModifications();
         }
 
         public WeaponAdditionalData(Transform _aimingAnchor)
         {
             aimingAnchor = _aimingAnchor;
             isCustomWeapon = true;
+            InitWeaponModifications();
         }
         public WeaponAdditionalData(Transform _aimingAnchor, bool _isCustomWeapon)
         {
             aimingAnchor = _aimingAnchor;
             isCustomWeapon = _isCustomWeapon;
+            InitWeaponModifications();
         }
     }
 }
