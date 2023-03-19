@@ -285,6 +285,8 @@ namespace RiseOfWar
             _base.ammo = _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
             _base.maxAmmoPerReload = _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
             _base.spareAmmo = _weaponProperties.GetInt(WeaponXMLProperties.MAGAZINES) * _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
+            _base.aimSensitivityMultiplier = 1;
+            _base.forceSniperAimSensitivity = false;
 
             float _shortDamage = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DAMAGE);
             float _shortDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DISTANCE);
