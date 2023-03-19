@@ -430,17 +430,19 @@ namespace RiseOfWar
         {
             if (_weapon == null)
             {
+                Plugin.LogError("ResourceManager: Cannot get properties of null weapon!");
                 return null;
             }
 
-            foreach (WeaponXMLProperties _prop in Instance._registeredWeaponProperties)
+            foreach (WeaponXMLProperties _properties in Instance._registeredWeaponProperties)
             {
-                if (_prop.name.Equals(_weapon.name))
+                if (_properties.name.Equals(_weapon.name))
                 {
-                    return _prop;
+                    return _properties;
                 }
             }
 
+            Plugin.LogError("ResourceManager: Could not find weapon properties for weapon \"{_weapon.name}\"!");
             return null;
         }
     }
