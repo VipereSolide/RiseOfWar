@@ -9,10 +9,12 @@ namespace RiseOfWar
         public Camera currentSeatCamera;
         public Seat currentSeat;
         public CustomFpsActorController controller;
+        public float stamina;
 
         public FpsActorControllerAdditionalData()
         {
             currentSeatCamera = null;
+            stamina = 0;
         }
 
         public FpsActorControllerAdditionalData(Camera _currentSeatCamera)

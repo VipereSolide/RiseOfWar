@@ -33,6 +33,8 @@ namespace RiseOfWar
         private Transform _playerInfoContainer;
         private TMP_Text _playerUsernameText;
         private Slider _playerStaminaSlider;
+        private Image _playerStaminaIconImage;
+        private CanvasGroup _playerStaminaSliderCanvasGroup;
         private Image[] _healthImages;
 
         #endregion
@@ -43,6 +45,7 @@ namespace RiseOfWar
         {
             _playerUsernameText.text = _username;
         }
+        
         public void SetHealthAmount(float _amount)
         {
             int _count = Mathf.RoundToInt(_amount / 10 * 2);
@@ -52,12 +55,20 @@ namespace RiseOfWar
                 _healthImages[_i].color = (_i < _count) ? new Color32(255, 255, 255, 255) : GameConfiguration.playerUIAttachmentInactiveColor;
             }
         }
+        
         public void SetPlayerStaminaAmount(float _stamina)
         {
-            _playerStaminaSlider.maxValue = 1;
+            _playerStaminaSlider.maxValue = GameConfiguration.playerMaxStamina;
             _playerStaminaSlider.minValue = 0;
+
+            float _lastStamina = _playerStaminaSlider.value;
             _playerStaminaSlider.value = _stamina;
+
+            float _alpha = (_stamina / GameConfiguration.playerMaxStamina) * 6;
+            _playerStaminaSliderCanvasGroup.alpha = _alpha;
+            _playerStaminaIconImage.color = new Color(_playerStaminaIconImage.color.r, _playerStaminaIconImage.color.g, _playerStaminaIconImage.color.b, _alpha);
         }
+        
         public Image GetAttachmentImage(WeaponModificationType _weaponAttachment)
         {
             switch (_weaponAttachment)
@@ -70,6 +81,7 @@ namespace RiseOfWar
                 default: return _bulletAttachmentImage;
             }
         }
+        
         public void SetWeaponModificationActive(WeaponModificationType _weaponAttachment, bool _active)
         {
             Image _attachment = GetAttachmentImage(_weaponAttachment);
@@ -86,6 +98,7 @@ namespace RiseOfWar
             SetWeaponModificationActive(WeaponModificationType.Spring, active);
             SetWeaponModificationActive(WeaponModificationType.Barrel, active);
         }
+        
         private string FillNumberWithZero(string _base, int _zeroAmount)
         {
             string _text = _base.ToString();
@@ -106,26 +119,32 @@ namespace RiseOfWar
 
             return _text;
         }
+        
         public void SetCurrentBulletAmount(int _amount)
         {
             _currentAmmoText.text = FillNumberWithZero(_amount.ToString(), 3);
         }
+        
         public void SetCurrentAmmoInReserveAmount(int _amount)
         {
             _currentAmmoInReserveText.text = FillNumberWithZero(_amount.ToString(), 3);
         }
+        
         public void SetWeaponFireMode(WeaponFireMode _fireMode)
         {
             _currentFireModeText.text = _fireMode.ToString().ToUpper();
         }
+        
         public void SetWeaponFireRange(int _rangeInMeters)
         {
             _currentFireRangeText.text = _rangeInMeters.ToString() + "m";
         }
+        
         public void SetWeaponCustomDisplayName(string _customDisplayName)
         {
             _customDisplayNameText.text = $"\"{_customDisplayName}\"";
         }
+        
         public void HideCustomDisplayName()
         {
             _customDisplayNameText.text = "";
@@ -137,11 +156,24 @@ namespace RiseOfWar
         {
             GetSingleton();
         }
+        
         private void Start()
         {
             GetReferences();
 
             SetPlayerUsername(ActorManager.instance.player.name);
+        }
+        
+        private void Update()
+        {
+            if (_playerStaminaSlider.value <= 0)
+            {
+                _playerStaminaSliderCanvasGroup.alpha = Mathf.Lerp(_playerStaminaSliderCanvasGroup.alpha, 0, Time.deltaTime * 3f);
+            }
+            else
+            {
+                _playerStaminaSliderCanvasGroup.alpha = Mathf.Lerp(_playerStaminaSliderCanvasGroup.alpha, 1, Time.deltaTime * 3f);
+            }
         }
 
         private void GetSingleton()
@@ -165,6 +197,8 @@ namespace RiseOfWar
             _playerInfoContainer = transform.Find("Player");
             _playerUsernameText = _playerInfoContainer.Find("Username/Text").GetComponent<TMP_Text>();
             _playerStaminaSlider = _playerInfoContainer.Find("Stamina/Slider").GetComponent<Slider>();
+            _playerStaminaIconImage = _playerInfoContainer.Find("Stamina/Icon").GetComponent<Image>();
+            _playerStaminaSliderCanvasGroup = _playerStaminaSlider.gameObject.AddComponent<CanvasGroup>();
             _healthImages = new Image[]
             {
                 _playerInfoContainer.Find("Health/Health Bars/0").GetComponent<Image>(),

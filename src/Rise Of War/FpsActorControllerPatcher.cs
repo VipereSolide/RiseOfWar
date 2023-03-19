@@ -15,6 +15,55 @@ namespace RiseOfWar
         [HarmonyPostfix]
         static void AwakePatch(FpsActorController __instance) { }
 
+        static void ManageStamina(FpsActorController __instance)
+        {
+            if (__instance == null)
+            {
+                Plugin.LogError("FpsActorControllerPatcher: Cannot manage stamina for null FPS actor controller!");
+                return;
+            }
+
+            if (__instance.GetAdditionalData() == null)
+            {
+                __instance.AddData(new FpsActorControllerAdditionalData());
+
+                if (__instance.GetAdditionalData() == null)
+                {
+                    Plugin.LogError("FpsActorControllerPatcher: Cannot manage stamina for fps actor controller with null additional data!");
+                    return;
+                }
+            }
+
+            if (__instance.actor == null)
+            {
+                Plugin.LogError("FpsActorControllerPatcher: Cannot manage stamina for null actor!");
+                return;
+            }
+
+            float _currentStamina = __instance.GetAdditionalData().stamina;
+            PlayerUI.instance.SetPlayerStaminaAmount(_currentStamina);
+
+            if (__instance.IsSprinting())
+            {
+                if (_currentStamina < GameConfiguration.playerMaxStamina)
+                {
+                    _currentStamina += Time.deltaTime * GameConfiguration.playerStaminaIncreaseSpeed;
+                }
+
+                __instance.GetAdditionalData().stamina = _currentStamina;
+                return;
+            }
+
+            _currentStamina -= Time.deltaTime * GameConfiguration.playerStaminaDecreaseSpeed;
+
+            if (_currentStamina < 0f)
+            {
+                _currentStamina = 0f;
+            }
+
+            __instance.GetAdditionalData().stamina = _currentStamina;
+        }
+
         static void ImplementCustomMovement(FpsActorController __instance)
         {
             __instance.GetAdditionalData().controller = __instance.gameObject.AddComponent<CustomFpsActorController>();
@@ -26,6 +75,8 @@ namespace RiseOfWar
         [HarmonyPrefix]
         static bool UpdatePatch(FpsActorController __instance)
         {
+            ManageStamina(__instance);
+
             if (Input.GetKeyDown(KeyCode.P))
             {
                 if (Time.timeScale <= 1)
