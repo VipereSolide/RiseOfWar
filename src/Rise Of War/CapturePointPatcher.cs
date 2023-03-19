@@ -19,15 +19,6 @@ namespace RiseOfWar
             }
 
             bool _isNeutralized = team == -1;
-            bool _hasCapturedPlayerPoint = __instance.owner == GameManager.PlayerTeam();
-            bool _hasCapturedEnemyPoint = !_isNeutralized && !_hasCapturedPlayerPoint;
-
-            /*
-             is neutralized && was player point -> lost
-            is neutralized && was enemy point -> neutralized
-            is captured && was player point -> enemy captured
-            is captured && !was player point -> player captured
-             */
 
             OnCapturePointInteractionEvent _interaction = new OnCapturePointInteractionEvent(OnCapturePointInteractionEvent.InteractionType.Lost, ActorManager.AliveActorsInRange(__instance.transform.position, __instance.captureRange), __instance.owner, team, __instance);
 
