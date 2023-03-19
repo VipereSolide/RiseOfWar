@@ -14,7 +14,8 @@ namespace RiseOfWar
 
                 if (_occupant != null)
                 {
-                    _occupant.Kill(info);
+                    info.healthDamage = _occupant.health + 1;
+                    _occupant.Damage(info);
                 }
             }
 
