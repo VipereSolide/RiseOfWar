@@ -25,6 +25,8 @@ namespace RiseOfWar
         /// </summary>
         public static float hitmarkerLifetime = 0.08f;
 
+        public static float cameraRecoilSmoothness = 20;
+
         /// <summary>
         /// The interval in frames count between two killfeed clear. This is to avoid duplicated messages.
         /// The lower the number, the less chances there will be to get a duplicated message, but the more

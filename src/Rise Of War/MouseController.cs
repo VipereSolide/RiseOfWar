@@ -69,7 +69,7 @@ namespace RiseOfWar
         }
         private void Update()
         {
-            _currentAdded = Vector2.Lerp(_currentAdded, _addedOffset, Time.deltaTime * 40f);
+            _currentAdded = Vector2.Lerp(_currentAdded, _addedOffset, Time.deltaTime * GameConfiguration.cameraRecoilSmoothness);
 
             if (MouseLook.paused)
             {
