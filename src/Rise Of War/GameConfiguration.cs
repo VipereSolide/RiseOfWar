@@ -9,6 +9,7 @@ namespace RiseOfWar
         public static string defaultImagesPath = "/Resources/Images/";
         public static string defaultAssetBundlesPath = "/Resources/Data/_packed/";
         public static string defaultMusicThemesPath = "/Resources/Sounds/Music/Themes/";
+        public static string defaultCaptureJinglesPath = "/Resources/Sounds/Music/Capture Jingles/";
         public static string defaultPatchesPath = "/Resources/Data/Patches/";
 
         /// <summary>
@@ -33,6 +34,8 @@ namespace RiseOfWar
         /// it will impact performances.
         /// </summary>
         public static int killfeedClearInterval = 2;
+
+
 
         /* UI SETTINGS */
 

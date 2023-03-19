@@ -12,17 +12,28 @@ namespace RiseOfWar
     {
         public static ResourceManager Instance { get; private set; }
 
+        private AudioClip[] _musicThemes;
+        private AudioClip _tempAudioClip;
+        private GameObject _loadingScreen;
+        private AudioClip _captureJingleRU;
+        private AudioClip _captureJingleUS;
+        private AudioClip _captureJingleGE;
+        private AudioClip _captureJingleLost;
+        private AudioClip _captureJingleNeutralized;
+
+        private List<WeaponXMLProperties> _registeredWeaponProperties = new List<WeaponXMLProperties>();
+        private List<RegisteredWeaponModifications> _registeredWeaponModifications = new List<RegisteredWeaponModifications>();
+
+        public AudioClip captureJingleRu { get { return _captureJingleRU; } }
+        public AudioClip captureJingleGe { get { return _captureJingleGE; } }
+        public AudioClip captureJingleUs { get { return _captureJingleUS; } }
+        public AudioClip captureJingleCapturePointLost { get { return _captureJingleLost; } }
+        public AudioClip captureJingleCapturePointNeutralized { get { return _captureJingleNeutralized; } }
+
         public AssetBundle loadingScreenAssetBundle { get; private set; }
         public AssetBundle killfeedAssetBundle { get; private set; }
         public AssetBundle playerUIAssetBundle { get; private set; }
         public Texture2D hitmarkerTexture { get; private set; }
-
-        private AudioClip[] _musicThemes;
-        private AudioClip _tempAudioClip;
-        private GameObject _loadingScreen;
-
-        private List<WeaponXMLProperties> _registeredWeaponProperties = new List<WeaponXMLProperties>();
-        private List<RegisteredWeaponModifications> _registeredWeaponModifications = new List<RegisteredWeaponModifications>();
 
         private void Awake()
         {
@@ -32,6 +43,7 @@ namespace RiseOfWar
             LoadWeaponPatches();
             GetHitmarkerTexture();
             AcquireWeaponModifications();
+            LoadCaptureJingleSounds();
         }
 
         private void AcquireWeaponModifications()
@@ -134,12 +146,12 @@ namespace RiseOfWar
                 }
             };
 
-            _properties = HandleWeaponSounds(_properties, _fireSoundsDirectory, 0);
-            _properties = HandleWeaponSounds(_properties, _aimInSoundsDirectory, 1);
+            _properties = HandleWeaponSounds(_properties, _fireSoundsDirectory, 0, _properties.GetInt(WeaponXMLProperties.BULLETS));
+            _properties = HandleWeaponSounds(_properties, _aimInSoundsDirectory, 1, 3);
             _registeredWeaponProperties.Add(_properties);
         }
 
-        private WeaponXMLProperties HandleWeaponSounds(WeaponXMLProperties _base, string _soundPath, int _index)
+        private WeaponXMLProperties HandleWeaponSounds(WeaponXMLProperties _base, string _soundPath, int _index, int _soundsCount)
         {
             Plugin.Log($"ResourceManager: Handling weapon sounds for weapon \"{_base.name}\"");
 
@@ -149,7 +161,7 @@ namespace RiseOfWar
             int _count = _filesInAudioDirectory.Length;
             int _currentIndex = 0;
 
-            for (int _i = 0; _i < _base.GetInt(WeaponXMLProperties.BULLETS); _i++)
+            for (int _i = 0; _i < _soundsCount; _i++)
             {
                 _clips.Add(LoadAudioClip(_filesInAudioDirectory[_currentIndex]));
                 _currentIndex++;
@@ -450,6 +462,17 @@ namespace RiseOfWar
 
             Plugin.LogError("ResourceManager: Could not find weapon properties for weapon \"{_weapon.name}\"!");
             return null;
+        }
+
+        public void LoadCaptureJingleSounds()
+        {
+            _captureJingleGE = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_ge.wav");
+            _captureJingleUS = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_us.wav");
+            _captureJingleRU = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_ru.wav");
+            _captureJingleLost = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_point_lost.wav");
+            _captureJingleNeutralized = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_neutralized.wav");
+
+            transform.gameObject.AddComponent<MusicJingleManager>();
         }
     }
 }

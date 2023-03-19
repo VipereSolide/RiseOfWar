@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RiseOfWar.Events
@@ -9,14 +10,47 @@ namespace RiseOfWar.Events
         public static Action<OnActorDieEvent> onActorDie;
         public static Action<OnPlayerDealtDamageEvent> onPlayerDealtDamage;
         public static Action<OnProjectileHitHitboxEvent> onProjectileHitHitbox;
+        public static Action<OnCapturePointInteractionEvent> onCapturePointInteraction;
+    }
+
+    [Serializable]
+    public class OnCapturePointInteractionEvent
+    {
+        public enum InteractionType
+        {
+            Captured,
+            Neutralized,
+            Lost,
+        }
+
+        public InteractionType type { get; private set; }
+        public Actor[] actorsOnPoint { get; private set; }
+        public int initialOwner { get; private set; }
+        public int currentOwner { get; private set; }
+
+        public OnCapturePointInteractionEvent(InteractionType type, Actor[] actorsOnPoint, int initialOwner, int currentOwner)
+        {
+            this.type = type;
+            this.actorsOnPoint = actorsOnPoint;
+            this.initialOwner = initialOwner;
+            this.currentOwner = currentOwner;
+        }
+
+        public OnCapturePointInteractionEvent(InteractionType type, List<Actor> actorsOnPoint, int initialOwner, int currentOwner)
+        {
+            this.type = type;
+            this.actorsOnPoint = actorsOnPoint.ToArray();
+            this.initialOwner = initialOwner;
+            this.currentOwner = currentOwner;
+        }
     }
 
     [Serializable]
     public class OnProjectileHitHitboxEvent
     {
-        public Projectile projectile { get; set; }
-        public Vector3 hitPosition { get; set; }
-        public Hitbox hitbox { get; set; }
+        public Projectile projectile { get; private set; }
+        public Vector3 hitPosition { get; private set; }
+        public Hitbox hitbox { get; private set; }
 
         public OnProjectileHitHitboxEvent(Projectile _projectile, Vector3 _position, Hitbox _hitbox)
         {

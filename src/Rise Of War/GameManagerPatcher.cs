@@ -5,6 +5,13 @@ namespace RiseOfWar
 {
     public class GameManagerPatcher
     {
+        [HarmonyPatch(typeof(GameManager), "Awake")]
+        [HarmonyPostfix]
+        static void AwakePatch()
+        {
+            SoundManager.instance.ResetAudioMixerGroup();
+        }
+
         [HarmonyPatch(typeof(GameManager), "StartGame")]
         [HarmonyPostfix]
         static void StartGamePatch(GameManager __instance)

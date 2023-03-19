@@ -46,6 +46,9 @@ namespace RiseOfWar
 
             RegisterPatches();
 
+            GameObject _soundManager = new GameObject("Sound Manager");
+            _soundManager.AddComponent<SoundManager>();
+
             GameObject _resourceManager = new GameObject("Resource Manager");
             _resourceManager.AddComponent<ResourceManager>();
 
@@ -84,6 +87,7 @@ namespace RiseOfWar
             _instance.PatchAll(typeof(ProjectilePatcher));
             _instance.PatchAll(typeof(GameManagerPatcher));
             _instance.PatchAll(typeof(GameModeBasePatcher));
+            _instance.PatchAll(typeof(CapturePointPatcher));
             _instance.PatchAll(typeof(DecalManagerPatcher));
             _instance.PatchAll(typeof(WeaponManagerPatcher));
             _instance.PatchAll(typeof(PlayerFpParentPatcher));
