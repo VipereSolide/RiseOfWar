@@ -29,6 +29,7 @@ namespace RiseOfWar
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
+            LoadWeaponPatches();
             GetHitmarkerTexture();
             AcquireWeaponModifications();
         }
@@ -403,6 +404,25 @@ namespace RiseOfWar
             foreach (string _dir in _directoriesNEU)
             {
                 StartCoroutine(UnpackWeaponPropertiesFile(_dir));
+            }
+        }
+
+        private void LoadWeaponPatches()
+        {
+            string _path = Application.dataPath + GameConfiguration.defaultPatchesPath + "Weapons/";
+            string[] _files = Directory.GetFiles(_path);
+
+            foreach (string _file in _files)
+            {
+                string _content = File.ReadAllText(_file);
+                XmlSerializer _serializer = new XmlSerializer(typeof(Patch));
+                StringReader _reader = new StringReader(_content);
+                Patch _patch = (Patch)_serializer.Deserialize(_reader);
+
+                if (_patch.type == "name")
+                {
+                    WeaponRegistry.RegisterNewRealName(_patch.GetString(Patch.PATCH_NAME_DEFAULT_NAME), _patch.GetString(Patch.PATCH_NAME_PATCHED_NAME));
+                }
             }
         }
 

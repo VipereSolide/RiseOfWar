@@ -11,92 +11,9 @@ namespace RiseOfWar
         [XmlElement(ElementName = "param")]
         public List<Param> Param;
 
-        private float ParseButUglyIEJFNZIEJEF(string _bodytext)
+        private float ParseToFloat(string content)
         {
-            return float.Parse(_bodytext);
-/*
-            string _fin = "";
-
-            foreach (char _char in _bodytext)
-            {
-                if (_char == '0')
-                {
-                    continue;
-                }
-
-                if (_char == '1')
-                {
-                    if (float.TryParse(_char.ToString(), out float _r))
-                    {
-                        _fin += _char;
-                    }
-                }
-                if (_char == '2')
-                {
-                    if (float.TryParse(_char.ToString(), out float _r))
-                    {
-                        _fin += _char;
-                    }
-                }
-                if (_char == '3')
-                {
-                    if (float.TryParse(_char.ToString(), out float _r))
-                    {
-                        _fin += _char;
-                    }
-                }
-                if (_char == '4')
-                {
-                    if (float.TryParse(_char.ToString(), out float _r))
-                    {
-                        _fin += _char;
-                    }
-                }
-                if (_char == '5')
-                {
-                    if (float.TryParse(_char.ToString(), out float _r))
-                    {
-                        _fin += _char;
-                    }
-                }
-                if (_char == '6')
-                {
-                    if (float.TryParse(_char.ToString(), out float _r))
-                    {
-                        _fin += _char;
-                    }
-                }
-                if (_char == '7')
-                {
-                    if (float.TryParse(_char.ToString(), out float _r))
-                    {
-                        _fin += _char;
-                    }
-                }
-                if (_char == '8')
-                {
-                    if (float.TryParse(_char.ToString(), out float _r))
-                    {
-                        _fin += _char;
-                    }
-                }
-                if (_char == '9')
-                {
-                    if (float.TryParse(_char.ToString(), out float _r))
-                    {
-                        _fin += _char;
-                    }
-                }
-                if (_char == '.')
-                {
-                    if (float.TryParse(_char.ToString(), out float _r))
-                    {
-                        _fin += _char;
-                    }
-                }
-            }
-
-            return float.Parse(_fin);*/
+            return float.Parse(content, System.Globalization.NumberStyles.Float);
         }
 
         public virtual bool HasParam(string name)
@@ -132,13 +49,24 @@ namespace RiseOfWar
             _output = null;
             return false;
         }
+        public virtual string GetString(string name)
+        {
+            Param _output = null;
+
+            if (TryFindParam(name, out _output))
+            {
+                return _output.text;
+            }
+
+            return string.Empty;
+        }
         public virtual int GetInt(string _name)
         {
             Param _output = null;
 
             if (TryFindParam(_name, out _output))
             {
-                return Mathf.CeilToInt(float.Parse(_output.text));
+                return Mathf.CeilToInt(ParseToFloat(_output.text));
             }
 
             return 0;
@@ -155,7 +83,7 @@ namespace RiseOfWar
                 // Debug.Log($"output.text: {_toparse.Replace(" ","&&").Replace("\n","&&").Replace("\r","&&").Replace("\\","")}");
                 try
                 {
-                    return ParseButUglyIEJFNZIEJEF(_output.text);
+                    return ParseToFloat(_output.text);
                 }
                 catch (Exception _ex)
                 {
@@ -173,7 +101,7 @@ namespace RiseOfWar
 
             if (TryFindParam(_name, out _output))
             {
-                return new Vector2(ParseButUglyIEJFNZIEJEF(_output.vx), ParseButUglyIEJFNZIEJEF(_output.vy));
+                return new Vector2(ParseToFloat(_output.vx), ParseToFloat(_output.vy));
             }
 
             return Vector2.zero;
@@ -184,7 +112,7 @@ namespace RiseOfWar
 
             if (TryFindParam(_name, out _output))
             {
-                return new Vector3(ParseButUglyIEJFNZIEJEF(_output.vx), ParseButUglyIEJFNZIEJEF(_output.vy), ParseButUglyIEJFNZIEJEF(_output.vz));
+                return new Vector3(ParseToFloat(_output.vx), ParseToFloat(_output.vy), ParseToFloat(_output.vz));
             }
 
             return Vector3.zero;

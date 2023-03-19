@@ -1,6 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System;
+
+using static WeaponManager;
 using UnityEngine;
 
 namespace RiseOfWar
@@ -57,6 +59,7 @@ namespace RiseOfWar
         }
 
         private static List<string> _weaponNames = new List<string>();
+        private static List<WeaponRegisteredName> _weaponRealNames = new List<WeaponRegisteredName>();
         public static string[] weaponNames
         {
             get { return _weaponNames.ToArray(); }
@@ -96,6 +99,47 @@ namespace RiseOfWar
             }
 
             return weaponNames.Contains(weaponName);
+        }
+
+        public static void RegisterNewRealName(string defaultName, string patchedName)
+        {
+            _weaponRealNames.Add(new WeaponRegisteredName(defaultName, patchedName));
+        }
+
+        public static string GetRealName(string weaponName)
+        {
+            for (int _i = 0; _i < _weaponRealNames.Count; _i++)
+            {
+                if (_weaponRealNames[_i].defaultName == weaponName)
+                {
+                    return _weaponRealNames[_i].patchedName;
+                }
+            }
+
+            return weaponName;
+        }
+
+        public static string GetRealName(Weapon weapon)
+        {
+            return GetRealName(weapon.name);
+        }
+
+        public static string GetRealName(WeaponEntry weapon)
+        {
+            return GetRealName(weapon.name);
+        }
+
+        [Serializable]
+        public class WeaponRegisteredName
+        {
+            public string defaultName;
+            public string patchedName;
+
+            public WeaponRegisteredName(string defaultName, string patchedName)
+            {
+                this.defaultName = defaultName;
+                this.patchedName = patchedName;
+            }
         }
     }
 }

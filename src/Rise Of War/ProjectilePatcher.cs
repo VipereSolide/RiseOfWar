@@ -14,7 +14,7 @@ namespace RiseOfWar
         private static void AwakePatch(Projectile __instance)
         {
             __instance.configuration.gravityMultiplier = 2;
-            __instance.configuration.lifetime = 6;
+            __instance.configuration.lifetime = GameConfiguration.projectileLifetime;
         }
 
         [HarmonyPatch(typeof(Projectile), "Update")]
