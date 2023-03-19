@@ -21,27 +21,31 @@ namespace RiseOfWar.Events
             Captured,
             Neutralized,
             Lost,
+            EnemyCapture,
         }
 
         public InteractionType type { get; private set; }
         public Actor[] actorsOnPoint { get; private set; }
         public int initialOwner { get; private set; }
         public int currentOwner { get; private set; }
+        public SpawnPoint spawnpoint { get; private set; }
 
-        public OnCapturePointInteractionEvent(InteractionType type, Actor[] actorsOnPoint, int initialOwner, int currentOwner)
+        public OnCapturePointInteractionEvent(InteractionType type, Actor[] actorsOnPoint, int initialOwner, int currentOwner, SpawnPoint spawnpoint)
         {
             this.type = type;
             this.actorsOnPoint = actorsOnPoint;
             this.initialOwner = initialOwner;
             this.currentOwner = currentOwner;
+            this.spawnpoint = spawnpoint;
         }
 
-        public OnCapturePointInteractionEvent(InteractionType type, List<Actor> actorsOnPoint, int initialOwner, int currentOwner)
+        public OnCapturePointInteractionEvent(InteractionType type, List<Actor> actorsOnPoint, int initialOwner, int currentOwner, SpawnPoint spawnpoint)
         {
             this.type = type;
             this.actorsOnPoint = actorsOnPoint.ToArray();
             this.initialOwner = initialOwner;
             this.currentOwner = currentOwner;
+            this.spawnpoint = spawnpoint;
         }
     }
 

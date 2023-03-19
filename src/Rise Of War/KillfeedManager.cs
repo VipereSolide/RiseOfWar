@@ -65,13 +65,13 @@ namespace RiseOfWar
                 damageInfo = _damageInfo;
                 sourceActor = _sourceActor;
             }
-            public KillfeedQueueItem(GameActions _gameAction, SpawnPoint _victimSpawnpoint, Actor _sourceActor)
+            public KillfeedQueueItem(GameActions _gameAction, SpawnPoint _victimSpawnpoint)
             {
                 type = KillfeedItemType.Game;
                 gameAction = _gameAction;
                 victimSpawnpoint = _victimSpawnpoint;
-                sourceActor = _sourceActor;
             }
+
             public KillfeedQueueItem()
             {
 
@@ -166,15 +166,34 @@ namespace RiseOfWar
 
             EventManager.onPlayerDealtDamage += OnPlayerDealtDamage;
             EventManager.onActorDie += OnActorDie;
+            EventManager.onCapturePointInteraction += OnCapturePointInteraction;
 
             Plugin.Log("KillfeedManager: Kill feed initialized.");
         }
+        
         private void Update()
         {
             HandleQueuedItems();
             HandleIncrement();
             HandleVehicleInfluence();
             HandleLivingItems();
+        }
+
+        private void OnCapturePointInteraction(OnCapturePointInteractionEvent _event)
+        {
+            if (_event.type == OnCapturePointInteractionEvent.InteractionType.Captured)
+            {
+                if (_event.currentOwner != GameManager.PlayerTeam())
+                {
+                    return;
+                }
+
+                CreateGameFeed(GameActions.Captured, _event.spawnpoint);
+            }
+            else if (_event.type == OnCapturePointInteractionEvent.InteractionType.Neutralized)
+            {
+                CreateGameFeed(GameActions.Neutralized, _event.spawnpoint);
+            }
         }
 
         private void OnActorDie(OnActorDieEvent _event)
@@ -184,6 +203,7 @@ namespace RiseOfWar
                 CreateActorFeed(ActorActions.Killed, _event.damage, default(HitInfo), _event.victim);
             }
         }
+
         private void OnPlayerDealtDamage(OnPlayerDealtDamageEvent _event)
         {
             if (_event.hit.actor == null)
@@ -237,6 +257,7 @@ namespace RiseOfWar
                 _queuedItems.RemoveAt(0);
             }
         }
+        
         private void HandleIncrement()
         {
             _increment += Time.deltaTime;
@@ -247,6 +268,7 @@ namespace RiseOfWar
                 _increment = 0;
             }
         }
+        
         private void HandleVehicleInfluence()
         {
             if (_vehicleInfluence > 0f)
@@ -256,6 +278,7 @@ namespace RiseOfWar
 
             _vehicleInfluence = Mathf.Clamp(_vehicleInfluence, 0f, 100f);
         }
+        
         private void HandleLivingItems()
         {
             foreach (CanvasGroup canvasGroup in _toDestroy)
@@ -268,6 +291,7 @@ namespace RiseOfWar
                 }
             }
         }
+        
         private void TreatKillfeedItems()
         {
             foreach (KillfeedQueueItem _item in _lastItems)
@@ -357,11 +381,13 @@ namespace RiseOfWar
 
             CreateCustomFeed(_feedMessage);
         }
+        
         private void DestroyFeed()
         {
             _toDestroy.Add(_feedItems[0]);
             _feedItems.RemoveAt(0);
         }
+        
         public void CreateCustomFeed(string _feedContent)
         {
             try
@@ -382,16 +408,19 @@ namespace RiseOfWar
 
             Invoke(nameof(DestroyFeed), 5f);
         }
+        
         public void CreateActorFeed(ActorActions _action, DamageInfo _damageInfo, HitInfo _hitInfo, Actor _victimActor)
         {
             Actor _sourceActor = _damageInfo.sourceActor;
             _queuedItems.Add(new KillfeedQueueItem(_action, _victimActor, _damageInfo, _hitInfo, _sourceActor));
         }
-        public void CreateGameFeed(GameActions _action, SpawnPoint _spawnpoint, Actor _sourceActor)
+        
+        public void CreateGameFeed(GameActions _action, SpawnPoint _spawnpoint)
         {
             _lastItems.Clear();
-            _queuedItems.Add(new KillfeedQueueItem(_action, _spawnpoint, _sourceActor));
+            _queuedItems.Add(new KillfeedQueueItem(_action, _spawnpoint));
         }
+        
         public void CreateVehicleFeed(VehicleActions _action, Vehicle _victimVehicle, DamageInfo _damageInfo)
         {
             _lastItems.Clear();

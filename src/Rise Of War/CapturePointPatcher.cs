@@ -18,36 +18,44 @@ namespace RiseOfWar
                 return;
             }
 
-            if (team == GameManager.PlayerTeam())
-            {
-                EventManager.onCapturePointInteraction(new OnCapturePointInteractionEvent(
-                    OnCapturePointInteractionEvent.InteractionType.Captured,
-                    ActorManager.AliveActorsInRange(__instance.transform.position, __instance.captureRange),
-                    __instance.owner,
-                    team
-                ));
-            }
-            else
-            {
-                if (team < -1)
-                {
-                    EventManager.onCapturePointInteraction(new OnCapturePointInteractionEvent(
-                        OnCapturePointInteractionEvent.InteractionType.Neutralized,
-                        ActorManager.AliveActorsInRange(__instance.transform.position, __instance.captureRange),
-                        __instance.owner,
-                        team
-                    ));
+            bool _isNeutralized = team == -1;
+            bool _hasCapturedPlayerPoint = __instance.owner == GameManager.PlayerTeam();
+            bool _hasCapturedEnemyPoint = !_isNeutralized && !_hasCapturedPlayerPoint;
 
-                    return;
-                }
+            /*
+             is neutralized && was player point -> lost
+            is neutralized && was enemy point -> neutralized
+            is captured && was player point -> enemy captured
+            is captured && !was player point -> player captured
+             */
 
-                EventManager.onCapturePointInteraction(new OnCapturePointInteractionEvent(
-                    OnCapturePointInteractionEvent.InteractionType.Lost,
-                    ActorManager.AliveActorsInRange(__instance.transform.position, __instance.captureRange),
-                    __instance.owner,
-                    team
-                ));
+            OnCapturePointInteractionEvent _interaction = new OnCapturePointInteractionEvent(OnCapturePointInteractionEvent.InteractionType.Lost, ActorManager.AliveActorsInRange(__instance.transform.position, __instance.captureRange), __instance.owner, team, __instance);
+
+            if (_isNeutralized && __instance.owner == GameManager.PlayerTeam())
+            {
+                // Lost
+                _interaction = new OnCapturePointInteractionEvent(OnCapturePointInteractionEvent.InteractionType.Lost, ActorManager.AliveActorsInRange(__instance.transform.position, __instance.captureRange), __instance.owner, team, __instance);
             }
+
+            if (_isNeutralized && __instance.owner != GameManager.PlayerTeam())
+            {
+                // Neutralized
+                _interaction = new OnCapturePointInteractionEvent(OnCapturePointInteractionEvent.InteractionType.Neutralized, ActorManager.AliveActorsInRange(__instance.transform.position, __instance.captureRange), __instance.owner, team, __instance);
+            }
+
+            if (!_isNeutralized && team == GameManager.PlayerTeam())
+            {
+                // Enemy captured
+                _interaction = new OnCapturePointInteractionEvent(OnCapturePointInteractionEvent.InteractionType.Captured, ActorManager.AliveActorsInRange(__instance.transform.position, __instance.captureRange), __instance.owner, team, __instance);
+            }
+
+            if (!_isNeutralized && team != GameManager.PlayerTeam())
+            {
+                // Player captured
+                _interaction = new OnCapturePointInteractionEvent(OnCapturePointInteractionEvent.InteractionType.EnemyCapture, ActorManager.AliveActorsInRange(__instance.transform.position, __instance.captureRange), __instance.owner, team, __instance);
+            }
+
+            EventManager.onCapturePointInteraction.Invoke(_interaction);
         }
     }
 }

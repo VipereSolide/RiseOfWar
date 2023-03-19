@@ -21,18 +21,31 @@ namespace RiseOfWar
             EventManager.onCapturePointInteraction += OnCapturePointInteractionListener;
         }
 
+        private AudioClip GetJingleFromTeam(int team)
+        {
+            if (team == 0)
+            {
+                return ResourceManager.Instance.captureJingleGe;
+            }
+
+            return ResourceManager.Instance.captureJingleRu;
+        }
+
         private void OnCapturePointInteractionListener(OnCapturePointInteractionEvent _event)
         {
             switch (_event.type)
             {
                 case OnCapturePointInteractionEvent.InteractionType.Captured:
-                    SoundManager.instance.PlaySound(ResourceManager.Instance.captureJingleGe);
+                    SoundManager.instance.ForcePlaySound(GetJingleFromTeam(0));
                     break;
                 case OnCapturePointInteractionEvent.InteractionType.Neutralized:
-                    SoundManager.instance.PlaySound(ResourceManager.Instance.captureJingleCapturePointNeutralized);
+                    SoundManager.instance.ForcePlaySound(ResourceManager.Instance.captureJingleCapturePointNeutralized);
                     break;
                 case OnCapturePointInteractionEvent.InteractionType.Lost:
-                    SoundManager.instance.PlaySound(ResourceManager.Instance.captureJingleCapturePointLost);
+                    SoundManager.instance.ForcePlaySound(ResourceManager.Instance.captureJingleCapturePointLost);
+                    break;
+                case OnCapturePointInteractionEvent.InteractionType.EnemyCapture:
+                    SoundManager.instance.ForcePlaySound(GetJingleFromTeam(1));
                     break;
             }
         }
