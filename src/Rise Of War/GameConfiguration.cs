@@ -9,6 +9,7 @@ namespace RiseOfWar
         public static string defaultImagesPath = "/Resources/Images/";
         public static string defaultAssetBundlesPath = "/Resources/Data/_packed/";
         public static string defaultMusicThemesPath = "/Resources/Sounds/Music/Themes/";
+        public static string defaultPatchesPath = "/Resources/Data/Patches/";
 
         /// <summary>
         /// Represents the field of view of the camera when any unscoped weapon is aiming.
@@ -16,6 +17,8 @@ namespace RiseOfWar
         public static float defaultAimingFieldOfView = 55;
 
         public static float constantAimingFOVSpeedMultiplier = 1.5f;
+
+        public static float projectileLifetime = 20f;
 
         /// <summary>
         /// The time the hitmarkers stay active on screen before disappearing.
