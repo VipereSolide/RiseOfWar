@@ -29,12 +29,22 @@ namespace RiseOfWar
                 return false;
             }
 
-            if (!__instance.GetAdditionalData().CanGetDamaged())
+            if (__instance.GetAdditionalData() == null || !__instance.GetAdditionalData().CanGetDamaged())
             {
-                return false;
+                __instance.AddData(new ActorAdditionalData());
+
+                if (__instance.GetAdditionalData() == null)
+                {
+                    Plugin.LogWarning("ActorPatcher: Cannot deal damage to actor without additional data.");
+                    return false;
+                }
             }
 
-            __instance.GetAdditionalData().lastTimeHit = Time.time;
+            if (__instance.GetAdditionalData() != null)
+            {
+                __instance.GetAdditionalData().lastTimeHit = Time.time;
+            }
+
             Plugin.Log("ActorPatcher: An actor took damage. Damage took = " + info.healthDamage + "; Point where projectile landed = " + info.point);
 
             if (info.sourceActor.team == __instance.team && info.sourceActor != __instance)
