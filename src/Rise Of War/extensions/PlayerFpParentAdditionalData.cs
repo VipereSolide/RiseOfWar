@@ -8,6 +8,7 @@ namespace RiseOfWar
     {
         public Transform recoilAnchor;
         public MouseController mouseController;
+        public float horizontalRecoilMultiplier;
 
         public PlayerFpParentAdditionalData()
         {

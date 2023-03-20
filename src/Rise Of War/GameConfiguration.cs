@@ -11,6 +11,7 @@ namespace RiseOfWar
         public static string defaultMusicThemesPath = "/Resources/Sounds/Music/Themes/";
         public static string defaultCaptureJinglesPath = "/Resources/Sounds/Music/Capture Jingles/";
         public static string defaultPatchesPath = "/Resources/Data/Patches/";
+        public static string defaultBadgesPath = "/Resources/Images/Badges/";
 
         /// <summary>
         /// Represents the field of view of the camera when any unscoped weapon is aiming.

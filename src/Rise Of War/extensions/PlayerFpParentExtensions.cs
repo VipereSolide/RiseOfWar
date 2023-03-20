@@ -45,12 +45,21 @@ namespace RiseOfWar
             }
 
             Weapon _weapon = _playerFpParent.GetProperty<Actor>("actor").activeWeapon;
+
             if (_weapon != null)
             {
                 _upward += _weapon.GetAdditionalData().modifications.GetModifiedValue(_upward, Modification.Modifications.CAMERA_RECOIL_UP);
                 _rightward += _weapon.GetAdditionalData().modifications.GetModifiedValue(_rightward, Modification.Modifications.CAMERA_RECOIL_RIGHT);
                 _variance += _weapon.GetAdditionalData().modifications.GetModifiedValue(_variance, Modification.Modifications.CAMERA_RECOIL_VARIANCE);
             }
+
+            if (FpsActorController.instance.GetAdditionalData() != null)
+            {
+                FpsActorController.instance.GetAdditionalData().playerBadges[0].Execute(_playerFpParent);
+            }
+
+            _variance *= _playerFpParent.GetAdditionalData().horizontalRecoilMultiplier;
+            _rightward *= _playerFpParent.GetAdditionalData().horizontalRecoilMultiplier;
 
             _rightward = _rightward + Random.Range(0, _variance);
             if (Random.value >= 0.5f)

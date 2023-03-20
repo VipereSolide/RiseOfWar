@@ -46,6 +46,8 @@ namespace RiseOfWar
 
             RegisterPatches();
 
+            PlayerBadgesRegistry.InitPlayerBadges();
+
             GameObject _soundManager = new GameObject("Sound Manager");
             _soundManager.AddComponent<SoundManager>();
 
