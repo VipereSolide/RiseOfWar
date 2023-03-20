@@ -296,11 +296,7 @@ namespace RiseOfWar
             }
 
             Weapon.Configuration _base = _weapon.configuration;
-            _base.projectilePrefab = _projectilePrefab;
-
-            Debug.Log("Hello world");
-            Debug.Log(_weaponProperties.GetInt(WeaponXMLProperties.BULLETS));
-            Debug.Log(_weaponProperties.GetInt(WeaponXMLProperties.MAGAZINES));
+            _base.projectilePrefab = CopyProjectileConfiguration(_base.projectile(), _projectilePrefab.GetComponent<Projectile>()).gameObject;
 
             _base.ammo = _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
             _base.maxAmmoPerReload = _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
@@ -385,9 +381,21 @@ namespace RiseOfWar
             }
 
             Weapon.Configuration _base = _weapon.configuration;
-            _base.projectilePrefab = _projectilePrefab;
-
+            _base.projectilePrefab = CopyProjectileConfiguration(_base.projectile(), _projectilePrefab.GetComponent<Projectile>()).gameObject;
             return _base;
+        }
+
+        private Projectile CopyProjectileConfiguration(Projectile from, Projectile to)
+        {
+            to.configuration.makesFlybySound = from.configuration.makesFlybySound;
+            to.configuration.flybyPitch = from.configuration.flybyPitch;
+            to.configuration.impactDecalSize = from.configuration.impactDecalSize;
+            to.configuration.impactForce = from.configuration.impactForce;
+            to.configuration.inheritVelocity = from.configuration.inheritVelocity;
+            to.configuration.passThroughPenetrateLayer = from.configuration.passThroughPenetrateLayer;
+            to.configuration.piercing = from.configuration.piercing;
+            to.configuration.balanceDamage = from.configuration.balanceDamage;
+            return to;
         }
 
         public List<RegisteredWeaponModifications> GetPossibleWeaponModifications(string weaponName)
