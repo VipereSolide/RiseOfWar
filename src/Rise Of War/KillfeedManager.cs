@@ -6,6 +6,7 @@ using UnityEngine;
 namespace RiseOfWar
 {
     using Events;
+    using System.Linq;
 
     public class KillfeedManager : MonoBehaviour
     {
@@ -181,9 +182,11 @@ namespace RiseOfWar
 
         private void OnCapturePointInteraction(OnCapturePointInteractionEvent _event)
         {
+            bool _containsPlayer = _event.actorsOnPoint.ToList().Contains(FpsActorController.instance.actor) == true;
+
             if (_event.type == OnCapturePointInteractionEvent.InteractionType.Captured)
             {
-                if (_event.currentOwner != GameManager.PlayerTeam())
+                if (_event.currentOwner != GameManager.PlayerTeam() || _containsPlayer == false)
                 {
                     return;
                 }
@@ -192,6 +195,11 @@ namespace RiseOfWar
             }
             else if (_event.type == OnCapturePointInteractionEvent.InteractionType.Neutralized)
             {
+                if (_containsPlayer == false)
+                {
+                    return;
+                }
+
                 CreateGameFeed(GameActions.Neutralized, _event.spawnpoint);
             }
         }
