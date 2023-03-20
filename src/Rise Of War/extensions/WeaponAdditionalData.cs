@@ -13,6 +13,7 @@ namespace RiseOfWar
         public bool wasAiming;
         public WeaponModifications modifications;
         public bool hasCustomDisplayName;
+        public GameObject projectile;
 
         public float currentConefire;
 
