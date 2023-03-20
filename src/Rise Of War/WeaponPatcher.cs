@@ -33,7 +33,7 @@ namespace RiseOfWar
         {
             Plugin.Log($"WeaponPatcher: Initializing weapon \"{__instance.name.Replace("\n", "\\n").Replace("\r", "\\r").Replace("\\", "\\\\").Replace(" ", "_")}\"...");
 
-            if (__instance.UserIsAI())
+            if (__instance == null)
             {
                 return;
             }
@@ -43,14 +43,15 @@ namespace RiseOfWar
                 return;
             }
 
+            if (__instance.UserIsAI())
+            {
+                __instance.configuration = ResourceManager.Instance.GetGlobalConfigurationForBots(__instance, __instance.weaponProperties());
+                return;
+            }
+
             CreateAimingAnchor(__instance);
             CreateAudioSource(__instance);
             CreateRecoilAnchor(__instance);
-
-            if (__instance == null)
-            {
-                return;
-            }
 
             __instance.configuration = ResourceManager.Instance.GetConfigurationFromProperties(__instance, __instance.weaponProperties());
             __instance.ResetSetup();

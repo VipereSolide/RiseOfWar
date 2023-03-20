@@ -21,6 +21,8 @@ namespace RiseOfWar
         private AudioClip _captureJingleLost;
         private AudioClip _captureJingleNeutralized;
 
+        private GameObject _projectilePrefab;
+
         private List<WeaponXMLProperties> _registeredWeaponProperties = new List<WeaponXMLProperties>();
         private List<RegisteredWeaponModifications> _registeredWeaponModifications = new List<RegisteredWeaponModifications>();
 
@@ -33,6 +35,7 @@ namespace RiseOfWar
         public AssetBundle loadingScreenAssetBundle { get; private set; }
         public AssetBundle killfeedAssetBundle { get; private set; }
         public AssetBundle playerUIAssetBundle { get; private set; }
+        public AssetBundle projectileAssetBundle { get; private set; }
         public Texture2D hitmarkerTexture { get; private set; }
 
         private void Awake()
@@ -40,6 +43,7 @@ namespace RiseOfWar
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
+            LoadProjectilePrefab();
             LoadWeaponPatches();
             GetHitmarkerTexture();
             AcquireWeaponModifications();
@@ -260,6 +264,12 @@ namespace RiseOfWar
             MainMenu.instance.music.clips = _musicThemes;
         }
 
+        private void LoadProjectilePrefab()
+        {
+            projectileAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "tracer");
+            _projectilePrefab = (GameObject)projectileAssetBundle.LoadAsset("assets/tracer/tracer.prefab");
+        }
+
         public Weapon.Configuration GetConfigurationFromProperties(Weapon _weapon, WeaponXMLProperties _weaponProperties)
         {
             Plugin.Log($"ResourceManager: Getting weapon configuration from properties of \"{_weapon.name}\"...");
@@ -277,6 +287,7 @@ namespace RiseOfWar
             }
 
             Weapon.Configuration _base = _weapon.configuration;
+            _base.projectilePrefab = _projectilePrefab;
 
             Debug.Log("Hello world");
             Debug.Log(_weaponProperties.GetInt(WeaponXMLProperties.BULLETS));
@@ -353,6 +364,19 @@ namespace RiseOfWar
                 _base.dropAmmoWhenReloading = _weaponProperties.GetBool(WeaponXMLProperties.DROP_AMMO_WHEN_RELOADING);
             }
 
+
+            return _base;
+        }
+
+        public Weapon.Configuration GetGlobalConfigurationForBots(Weapon _weapon, WeaponXMLProperties _weaponProperties)
+        {
+            if (_weapon == null || _weapon.configuration == null)
+            {
+                return _weapon.configuration;
+            }
+
+            Weapon.Configuration _base = _weapon.configuration;
+            _base.projectilePrefab = _projectilePrefab;
 
             return _base;
         }

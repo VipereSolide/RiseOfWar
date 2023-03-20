@@ -1,9 +1,10 @@
-﻿using System;
+﻿using System.Collections;
+using System;
+
+using UnityEngine.UI;
 using UnityEngine;
 using HarmonyLib;
-using UnityEngine.UI;
 using TMPro;
-using System.Collections;
 
 namespace RiseOfWar
 {
@@ -15,6 +16,13 @@ namespace RiseOfWar
         {
             __instance.configuration.gravityMultiplier = 2;
             __instance.configuration.lifetime = GameConfiguration.projectileLifetime;
+        }
+
+        [HarmonyPatch(typeof(Projectile), "Awake")]
+        [HarmonyPostfix]
+        private static void AwakePatchPostfix(Projectile __instance)
+        {
+            __instance.gameObject.AddComponent<CustomProjectile>();
         }
 
         [HarmonyPatch(typeof(Projectile), "Update")]
