@@ -53,5 +53,6 @@ namespace RiseOfWar
         public static float playerMaxStamina = 15;
         public static float playerStaminaIncreaseSpeed = 1;
         public static float playerStaminaDecreaseSpeed = 1.25f;
+        public static float playerJumpStamina = 3;
     }
 }

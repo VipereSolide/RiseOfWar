@@ -15,6 +15,13 @@ namespace RiseOfWar
         [HarmonyPostfix]
         static void AwakePatch(FpsActorController __instance) { }
 
+        [HarmonyPatch(typeof(FpsActorController), "Jump")]
+        [HarmonyPostfix]
+        static void JumpPatch(FpsActorController __instance)
+        {
+            __instance.GetAdditionalData().stamina += GameConfiguration.playerJumpStamina;
+        }
+
         static void ManageStamina(FpsActorController __instance)
         {
             if (__instance == null)
