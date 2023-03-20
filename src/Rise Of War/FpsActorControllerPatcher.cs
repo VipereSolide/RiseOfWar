@@ -175,6 +175,14 @@ namespace RiseOfWar
 
             StringBuilder _builder = new StringBuilder();
 
+            _builder.AppendLine("Is complex reload: " + _current.configuration.advancedReload);
+            _builder.AppendLine("Drop ammo when reloading: " + _current.configuration.dropAmmoWhenReloading);
+            _builder.AppendLine("Use max ammo per reload: " + _current.configuration.useMaxAmmoPerReload);
+            _builder.AppendLine("Max ammo per reload: " + _current.configuration.maxAmmoPerReload);
+            _builder.AppendLine("Max remaining ammo after drop: " + _current.configuration.maxRemainingAmmoAfterDrop);
+
+            _builder.AppendLine();
+
             if (_current.GetAdditionalData().modifications == null)
             {
                 _builder.AppendLine("Modifications are null :(");

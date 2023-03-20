@@ -67,13 +67,13 @@ namespace RiseOfWar
                 switch (_badge.level)
                 {
                     case 0:
-                        _horizontalRecoilMultiplier = 20;
+                        _horizontalRecoilMultiplier = 0.75f;
                         break;
                     case 1:
-                        _horizontalRecoilMultiplier = 4;
+                        _horizontalRecoilMultiplier = 0.65f;
                         break;
                     case 2:
-                        _horizontalRecoilMultiplier = 12;
+                        _horizontalRecoilMultiplier = 0.35f;
                         break;
                 }
 

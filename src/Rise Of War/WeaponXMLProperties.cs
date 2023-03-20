@@ -19,6 +19,10 @@ namespace RiseOfWar
         public static readonly string CONE_EXPANSION_PER_SHOT = "coneExpansionPerShot";
         public static readonly string CONE_CONTRACTION_PER_SECOND = "coneContractionPerSecond";
 
+        public static readonly string IS_ADVANCED_RELOAD = "isAdvancedReload";
+        public static readonly string DROP_AMMO_WHEN_RELOADING = "dropAmmoWhenReloading";
+        public static readonly string USE_MAX_AMMO_PER_RELOAD = "useMaxAmmoPerReload";
+
         [XmlElement(ElementName = "name")]
         public string name;
 

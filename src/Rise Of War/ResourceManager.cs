@@ -306,12 +306,15 @@ namespace RiseOfWar
                 }
             }
 
-            _shortDamage += _weapon.GetAdditionalData().modifications.GetModifiedValue(_shortDamage, Modification.Modifications.SHORT_DAMAGE);
-            _shortDistance += _weapon.GetAdditionalData().modifications.GetModifiedValue(_shortDistance, Modification.Modifications.SHORT_DISTANCE);
-            _longDamage += _weapon.GetAdditionalData().modifications.GetModifiedValue(_longDamage, Modification.Modifications.LONG_DAMAGE);
-            _velocity += _weapon.GetAdditionalData().modifications.GetModifiedValue(_velocity, Modification.Modifications.VELOCITY);
-            _longDistance += _weapon.GetAdditionalData().modifications.GetModifiedValue(_longDistance, Modification.Modifications.LONG_DISTANCE);
-            _roundsPerMinute += _weapon.GetAdditionalData().modifications.GetModifiedValue(_roundsPerMinute, Modification.Modifications.ROUNDS_PER_MINUTE);
+            if (_weapon.GetAdditionalData().modifications != null)
+            {
+                _shortDamage += _weapon.GetAdditionalData().modifications.GetModifiedValue(_shortDamage, Modification.Modifications.SHORT_DAMAGE);
+                _shortDistance += _weapon.GetAdditionalData().modifications.GetModifiedValue(_shortDistance, Modification.Modifications.SHORT_DISTANCE);
+                _longDamage += _weapon.GetAdditionalData().modifications.GetModifiedValue(_longDamage, Modification.Modifications.LONG_DAMAGE);
+                _velocity += _weapon.GetAdditionalData().modifications.GetModifiedValue(_velocity, Modification.Modifications.VELOCITY);
+                _longDistance += _weapon.GetAdditionalData().modifications.GetModifiedValue(_longDistance, Modification.Modifications.LONG_DISTANCE);
+                _roundsPerMinute += _weapon.GetAdditionalData().modifications.GetModifiedValue(_roundsPerMinute, Modification.Modifications.ROUNDS_PER_MINUTE);
+            }
 
             _base.cooldown = 60f / _roundsPerMinute;
 
@@ -335,6 +338,21 @@ namespace RiseOfWar
 
             _base.followupMaxSpreadAim = 0;
             _base.followupMaxSpreadHip = 0;
+
+            if (_weaponProperties.HasParam(WeaponXMLProperties.IS_ADVANCED_RELOAD))
+            {
+                _base.advancedReload = _weaponProperties.GetBool(WeaponXMLProperties.IS_ADVANCED_RELOAD);
+            }
+
+            if (_weaponProperties.HasParam(WeaponXMLProperties.USE_MAX_AMMO_PER_RELOAD))
+            {
+                _base.useMaxAmmoPerReload = _weaponProperties.GetBool(WeaponXMLProperties.USE_MAX_AMMO_PER_RELOAD);
+            }
+            if (_weaponProperties.HasParam(WeaponXMLProperties.DROP_AMMO_WHEN_RELOADING))
+            {
+                _base.dropAmmoWhenReloading = _weaponProperties.GetBool(WeaponXMLProperties.DROP_AMMO_WHEN_RELOADING);
+            }
+
 
             return _base;
         }
