@@ -190,6 +190,8 @@ namespace RiseOfWar
 
             _builder.AppendLine();
 
+            _builder.AppendLine("Current cone fire: " + _current.GetAdditionalData().currentConefire.ToString());
+
             if (_current.GetAdditionalData().modifications == null)
             {
                 _builder.AppendLine("Modifications are null :(");

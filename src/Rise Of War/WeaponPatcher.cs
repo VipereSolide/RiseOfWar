@@ -97,6 +97,7 @@ namespace RiseOfWar
             _source.playOnAwake = false;
             __instance.GetAdditionalData().source = _source;
         }
+        
         private static void CreateAimingAnchor(Weapon __instance)
         {
             if (__instance == null)
@@ -115,6 +116,7 @@ namespace RiseOfWar
 
             Plugin.Log($"WeaponPatcher: Successfully initialized aiming anchor for weapon \"{__instance.name}\"!");
         }
+     
         private static void CreateRecoilAnchor(Weapon __instance)
         {
             if (__instance == null)
@@ -138,6 +140,11 @@ namespace RiseOfWar
         [HarmonyPostfix]
         private static void PatchUpdate(Weapon __instance)
         {
+            if (__instance == null)
+            {
+                return;
+            }
+
             if (__instance.UserIsAI())
             {
                 return;
@@ -362,6 +369,12 @@ namespace RiseOfWar
             }
             else
             {
+                if (__instance.aiming == false)
+                {
+                    Plugin.Log("WeaponPatcher: Received conefire expansion data = " + __instance.weaponProperties().GetFloat(WeaponXMLProperties.CONE_EXPANSION_PER_SHOT));
+                    __instance.GetAdditionalData().currentConefire += __instance.weaponProperties().GetFloat(WeaponXMLProperties.CONE_EXPANSION_PER_SHOT);
+                }
+
                 Vector3 _fireDirection = PlayerFpParent.instance.fpCamera.transform.forward;
                 
                 float _lastFiredTimestamp = (float)Traverse.Create(__instance).Field("lastFiredTimestamp").GetValue();
@@ -464,11 +477,6 @@ namespace RiseOfWar
                 {
                     Plugin.Log("WeaponPatcher: Received conefire expansion data = " + __instance.weaponProperties().aiming.GetFloat(WeaponXMLProperties.Aiming.CONE_EXPANSION_PER_SHOT_AIMED));
                     __instance.GetAdditionalData().currentConefire += __instance.weaponProperties().aiming.GetFloat(WeaponXMLProperties.Aiming.CONE_EXPANSION_PER_SHOT_AIMED);
-                }
-                else
-                {
-                    Plugin.Log("WeaponPatcher: Received conefire expansion data = " + __instance.weaponProperties().GetFloat(WeaponXMLProperties.CONE_EXPANSION_PER_SHOT));
-                    __instance.GetAdditionalData().currentConefire += __instance.weaponProperties().GetFloat(WeaponXMLProperties.CONE_EXPANSION_PER_SHOT);
                 }
 
                 return false;

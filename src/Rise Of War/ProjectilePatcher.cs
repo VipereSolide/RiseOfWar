@@ -22,7 +22,7 @@ namespace RiseOfWar
         [HarmonyPostfix]
         private static void AwakePatchPostfix(Projectile __instance)
         {
-            __instance.gameObject.AddComponent<CustomProjectile>();
+            // __instance.gameObject.AddComponent<CustomProjectile>();
         }
 
         [HarmonyPatch(typeof(Projectile), "Update")]
