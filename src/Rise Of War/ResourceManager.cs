@@ -31,6 +31,7 @@ namespace RiseOfWar
         public AudioClip captureJingleUs { get { return _captureJingleUS; } }
         public AudioClip captureJingleCapturePointLost { get { return _captureJingleLost; } }
         public AudioClip captureJingleCapturePointNeutralized { get { return _captureJingleNeutralized; } }
+        public Material[] projectileTracerMaterials { get; private set; }
 
         public AssetBundle loadingScreenAssetBundle { get; private set; }
         public AssetBundle killfeedAssetBundle { get; private set; }
@@ -268,6 +269,14 @@ namespace RiseOfWar
         {
             projectileAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "tracer");
             _projectilePrefab = (GameObject)projectileAssetBundle.LoadAsset("assets/tracer/tracer.prefab");
+
+            List<Material> _materials = new List<Material>();
+            _materials.Add((Material)projectileAssetBundle.LoadAsset("assets/tracer/yellow tracer.mat"));
+            _materials.Add((Material)projectileAssetBundle.LoadAsset("assets/tracer/red tracer.mat"));
+            _materials.Add((Material)projectileAssetBundle.LoadAsset("assets/tracer/green tracer.mat"));
+            _materials.Add((Material)projectileAssetBundle.LoadAsset("assets/tracer/blue tracer.mat"));
+
+            projectileTracerMaterials = _materials.ToArray();
         }
 
         public Weapon.Configuration GetConfigurationFromProperties(Weapon _weapon, WeaponXMLProperties _weaponProperties)
