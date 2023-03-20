@@ -7,6 +7,19 @@ namespace RiseOfWar
 
     public class ActorPatcher
     {
+        [HarmonyPatch(typeof(Actor), "SpawnWeapon")]
+        [HarmonyPrefix]
+        static bool SpawnWeaponPatch(Actor __instance, ref Weapon __result, WeaponManager.WeaponEntry entry, int slotNumber)
+        {
+            if (WeaponRegistry.IsCustomWeapon(entry) == false)
+            {
+                __result = null;
+                return false;
+            }
+
+            return true;
+        }
+
         [HarmonyPatch(typeof(Actor), "Die")]
         [HarmonyPrefix]
         static bool DiePatch(Actor __instance, DamageInfo info, bool isSilentKill)

@@ -20,12 +20,12 @@ namespace RiseOfWar
         [HarmonyPrefix]
         private static bool SetupTagGroupsPatch(WeaponSelectionUi __instance)
         {
-            List<string> list;
-            Dictionary<string, List<WeaponManager.WeaponEntry>> _taggedWeapons = WeaponManager.GetWeaponTagDictionary(__instance.slot, __instance.defaultTags, out list, false);
+            List<string> _registeredWeapons;
+            Dictionary<string, List<WeaponManager.WeaponEntry>> _taggedWeapons = WeaponManager.GetWeaponTagDictionary(__instance.slot, __instance.defaultTags, out _registeredWeapons, true);
 
-            __instance.SetProperty("selectionHighlighter", new Dictionary<int, RawImage>(list.Count));
-            __instance.SetProperty("tagText", new Dictionary<int, Text>(list.Count));
-            __instance.GetProperty<RectTransform>("tagButtonPanel").SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 20f + 340f * (float)list.Count);
+            __instance.SetProperty("selectionHighlighter", new Dictionary<int, RawImage>(_registeredWeapons.Count));
+            __instance.SetProperty("tagText", new Dictionary<int, Text>(_registeredWeapons.Count));
+            __instance.GetProperty<RectTransform>("tagButtonPanel").SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 20f + 340f * (float)_registeredWeapons.Count);
             __instance.SetProperty("tagGroupContainer", new List<GameObject>());
 
             int num = Mathf.Max(1, Mathf.FloorToInt((float)Screen.width / 410f));
@@ -33,7 +33,7 @@ namespace RiseOfWar
             __instance.SetProperty("tagIndexOfEntry", new Dictionary<WeaponManager.WeaponEntry, int>());
             bool flag = false;
 
-            foreach (string key in list)
+            foreach (string key in _registeredWeapons)
             {
                 _taggedWeapons[key].RemoveAll(ShouldBeRemoved);
 
@@ -46,106 +46,105 @@ namespace RiseOfWar
 
             if (!flag)
             {
-                _taggedWeapons[list[0]].Add(null);
+                _taggedWeapons[_registeredWeapons[0]].Add(null);
             }
 
-            list.RemoveAll((string tag) => _taggedWeapons[tag].Count == 0);
-            for (int i = 0; i < list.Count; i++)
+            _registeredWeapons.RemoveAll((string tag) => _taggedWeapons[tag].Count == 0);
+            for (int i = 0; i < _registeredWeapons.Count; i++)
             {
-                Button component = UnityEngine.Object.Instantiate<GameObject>(__instance.tagGroupButtonPrefab).GetComponent<Button>();
-                RectTransform rectTransform = (RectTransform)component.transform;
-                rectTransform.SetParent(__instance.tagButtonPanel, false);
-                rectTransform.anchoredPosition = new Vector2(20f + 340f * (float)i, 0f);
-                int index = i;
+                Button _instantiatedWeapon = GameObject.Instantiate(__instance.tagGroupButtonPrefab).GetComponent<Button>();
+                RectTransform _instantiatedWeaponRectTransform = (RectTransform)_instantiatedWeapon.transform;
+                _instantiatedWeaponRectTransform.SetParent(__instance.tagButtonPanel, false);
+                _instantiatedWeaponRectTransform.anchoredPosition = new Vector2(20f + 340f * i, 0f);
+                
+                int _index = i;
+                _instantiatedWeapon.onClick.AddListener(() => __instance.OpenTag(_index));
 
-                component.onClick.AddListener(delegate ()
-                {
-                    __instance.OpenTag(index);
-                });
-
-                component.GetComponentInChildren<Text>().text = list[i];
-                __instance.GetProperty<Dictionary<int, RawImage>>("selectionHighlighter").Add(i, component.GetComponentInChildren<RawImage>());
-                __instance.GetProperty<Dictionary<int, Text>>("tagText").Add(i, component.GetComponentInChildren<Text>());
+                _instantiatedWeapon.GetComponentInChildren<Text>().text = WeaponRegistry.GetRealName(_registeredWeapons[i]);
+                __instance.GetProperty<Dictionary<int, RawImage>>("selectionHighlighter").Add(i, _instantiatedWeapon.GetComponentInChildren<RawImage>());
+                __instance.GetProperty<Dictionary<int, Text>>("tagText").Add(i, _instantiatedWeapon.GetComponentInChildren<Text>());
                 __instance.GetProperty<Dictionary<int, Text>>("tagText")[i].color = Color.gray;
 
-                RectTransform rectTransform2 = (RectTransform)UnityEngine.Object.Instantiate<GameObject>(__instance.tagGroupContainerPrefab).transform;
-                rectTransform2.SetParent(__instance.weaponEntryPanel, false);
-                __instance.GetProperty<List<GameObject>>("tagGroupContainer").Add(rectTransform2.gameObject);
+                RectTransform _instantiatedTagGroupContainer = (RectTransform)GameObject.Instantiate(__instance.tagGroupContainerPrefab).transform;
+                _instantiatedTagGroupContainer.SetParent(__instance.weaponEntryPanel, false);
+                __instance.GetProperty<List<GameObject>>("tagGroupContainer").Add(_instantiatedTagGroupContainer.gameObject);
+                RectTransform _weaponEntryContainer = (RectTransform)_instantiatedTagGroupContainer.GetChild(0).GetChild(0);
 
-                RectTransform rectTransform3 = (RectTransform)rectTransform2.GetChild(0).GetChild(0);
-
-                if (_taggedWeapons.ContainsKey(list[i]))
+                if (_taggedWeapons.ContainsKey(_registeredWeapons[i]))
                 {
-                    int num3 = 0;
-                    int num4 = 0;
-                    float num5 = 0f;
+                    int _weaponEntryLine = 0;
+                    int _weaponEntryCount = 0;
+                    float _height = 0f;
                     ModInformation modInformation = ModInformation.OfficialContent;
 
-                    using (List<WeaponManager.WeaponEntry>.Enumerator enumerator2 = _taggedWeapons[list[i]].GetEnumerator())
+                    using (List<WeaponManager.WeaponEntry>.Enumerator enumerator2 = _taggedWeapons[_registeredWeapons[i]].GetEnumerator())
                     {
                         while (enumerator2.MoveNext())
                         {
-                            WeaponManager.WeaponEntry weaponEntry = enumerator2.Current;
+                            WeaponManager.WeaponEntry _weaponEntry = enumerator2.Current;
 
-                            if (weaponEntry != null && weaponEntry.sourceMod != modInformation)
+                            if (_weaponEntry != null && _weaponEntry.sourceMod != modInformation)
                             {
-                                modInformation = weaponEntry.sourceMod;
-                                if (num3 > 0)
+                                modInformation = _weaponEntry.sourceMod;
+                                
+                                if (_weaponEntryLine > 0)
                                 {
-                                    num3 = 0;
-                                    num4++;
+                                    _weaponEntryLine = 0;
+                                    _weaponEntryCount++;
                                 }
-                                RectTransform rectTransform4 = UnityEngine.Object.Instantiate<GameObject>(__instance.weaponEntryGroupPrefab).transform as RectTransform;
-                                rectTransform4.SetParent(rectTransform3, false);
-                                rectTransform4.anchoredPosition = new Vector2(((float)num3 + 0.5f) * num2, -20f - (float)num4 * 190f - num5);
-                                rectTransform4.GetComponentInChildren<Text>().text = modInformation.title;
-                                num5 += 40f;
+                                
+                                RectTransform _instantiatedWeaponEntry = (RectTransform)GameObject.Instantiate(__instance.weaponEntryGroupPrefab).transform;
+                                _instantiatedWeaponEntry.SetParent(_weaponEntryContainer, false);
+                                _instantiatedWeaponEntry.anchoredPosition = new Vector2(((float)_weaponEntryLine + 0.5f) * num2, -20f - (float)_weaponEntryCount * 190f - _height);
+                                _instantiatedWeaponEntry.GetComponentInChildren<Text>().text = modInformation.title;
+                                _height += 40f;
                             }
 
-                            Button component2 = UnityEngine.Object.Instantiate<GameObject>((weaponEntry == null || weaponEntry.slot == WeaponManager.WeaponSlot.Primary || weaponEntry.slot == WeaponManager.WeaponSlot.LargeGear) ? __instance.weaponEntryPrefab : __instance.weaponEntrySmallPrefab).GetComponent<Button>();
-                            component2.onClick.AddListener(delegate ()
+                            Button _weaponEntryButton = GameObject.Instantiate(__instance.weaponEntrySmallPrefab).GetComponent<Button>();
+                            // Button _weaponEntryButton = GameObject.Instantiate((_weaponEntry == null || _weaponEntry.slot == WeaponManager.WeaponSlot.Primary || _weaponEntry.slot == WeaponManager.WeaponSlot.LargeGear) ? __instance.weaponEntryPrefab : __instance.weaponEntrySmallPrefab).GetComponent<Button>();
+                            _weaponEntryButton.onClick.AddListener(delegate ()
                             {
-                                LoadoutUi.instance.WeaponSelected(weaponEntry);
+                                LoadoutUi.instance.WeaponSelected(_weaponEntry);
                             });
 
-                            RectTransform rectTransform5 = (RectTransform)component2.transform;
-                            rectTransform5.SetParent(rectTransform3, false);
+                            RectTransform _entryRectTransform = (RectTransform)_weaponEntryButton.transform;
+                            _entryRectTransform.SetParent(_weaponEntryContainer, false);
 
-                            if (weaponEntry != null)
+                            if (_weaponEntry != null)
                             {
-                                rectTransform5.GetComponentInChildren<Image>().sprite = weaponEntry.uiSprite;
-                                rectTransform5.GetComponentInChildren<Text>().text = WeaponRegistry.GetRealName(weaponEntry);
+                                _entryRectTransform.GetComponentInChildren<Image>().sprite = _weaponEntry.uiSprite;
+                                _entryRectTransform.GetComponentInChildren<Text>().text = WeaponRegistry.GetRealName(_weaponEntry);
                             }
                             else
                             {
-                                rectTransform5.GetComponentInChildren<Image>().sprite = LoadoutUi.instance.nothingSprite;
-                                rectTransform5.GetComponentInChildren<Text>().text = "";
+                                _entryRectTransform.GetComponentInChildren<Image>().sprite = LoadoutUi.instance.nothingSprite;
+                                _entryRectTransform.GetComponentInChildren<Text>().text = "";
                             }
 
-                            rectTransform5.anchoredPosition = new Vector2(((float)num3 + 0.5f) * num2, -20f - (float)num4 * 190f - num5);
-                            if (weaponEntry != null && !__instance.GetProperty<Dictionary<WeaponManager.WeaponEntry, int>>("tagIndexOfEntry").ContainsKey(weaponEntry))
+                            _entryRectTransform.anchoredPosition = new Vector2(((float)_weaponEntryLine + 0.5f) * num2, -20f - (float)_weaponEntryCount * 190f - _height);
+                            if (_weaponEntry != null && !__instance.GetProperty<Dictionary<WeaponManager.WeaponEntry, int>>("tagIndexOfEntry").ContainsKey(_weaponEntry))
                             {
-                                __instance.GetProperty<Dictionary<WeaponManager.WeaponEntry, int>>("tagIndexOfEntry").Add(weaponEntry, i);
+                                __instance.GetProperty<Dictionary<WeaponManager.WeaponEntry, int>>("tagIndexOfEntry").Add(_weaponEntry, i);
                             }
 
-                            num3++;
-                            if (num3 >= num)
+                            _weaponEntryLine++;
+                            if (_weaponEntryLine >= num)
                             {
-                                num3 = 0;
-                                num4++;
+                                _weaponEntryLine = 0;
+                                _weaponEntryCount++;
                             }
                         }
                     }
 
-                    if (num3 > 0)
+                    if (_weaponEntryLine > 0)
                     {
-                        num4++;
+                        _weaponEntryCount++;
                     }
 
-                    rectTransform3.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 60f + (float)num4 * 190f + num5);
+                    _weaponEntryContainer.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 60f + (float)_weaponEntryCount * 190f + _height);
                 }
 
-                rectTransform2.gameObject.SetActive(false);
+                _instantiatedTagGroupContainer.gameObject.SetActive(false);
             }
 
             return false;
