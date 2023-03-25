@@ -8,6 +8,8 @@ namespace RiseOfWar.Events
     {
         public static Action<OnActorHitEvent> onActorHit;
         public static Action<OnActorDieEvent> onActorDie;
+        public static Action<OnActorSpawnEvent> onActorSpawn;
+        public static Action<OnVehicleSpawnEvent> onVehicleSpawn;
         public static Action<OnPlayerDealtDamageEvent> onPlayerDealtDamage;
         public static Action<OnProjectileHitHitboxEvent> onProjectileHitHitbox;
         public static Action<OnCapturePointInteractionEvent> onCapturePointInteraction;
@@ -76,6 +78,28 @@ namespace RiseOfWar.Events
             damage = _damage;
             isSilentKill = _isSilentKill;
             victim = _victim;
+        }
+    }
+
+    [Serializable]
+    public class OnActorSpawnEvent
+    {
+        public Actor actor { get; private set; }
+
+        public OnActorSpawnEvent(Actor actor)
+        {
+            this.actor = actor;
+        }
+    }
+
+    [Serializable]
+    public class OnVehicleSpawnEvent
+    {
+        public Vehicle vehicle { get; private set; }
+
+        public OnVehicleSpawnEvent(Vehicle vehicle)
+        {
+            this.vehicle = vehicle;
         }
     }
 

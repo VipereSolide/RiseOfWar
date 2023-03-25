@@ -7,6 +7,13 @@ namespace RiseOfWar
 
     public class ActorPatcher
     {
+        [HarmonyPatch(typeof(Actor), "SpawnAt")]
+        [HarmonyPostfix]
+        static void SpawnAtPatch(Actor __instance)
+        {
+            EventManager.onActorSpawn.Invoke(new OnActorSpawnEvent(__instance));
+        }
+
         [HarmonyPatch(typeof(Actor), "SpawnWeapon")]
         [HarmonyPrefix]
         static bool SpawnWeaponPatch(Actor __instance, ref Weapon __result, WeaponManager.WeaponEntry entry, int slotNumber)
@@ -24,12 +31,20 @@ namespace RiseOfWar
         [HarmonyPrefix]
         static bool DiePatch(Actor __instance, DamageInfo info, bool isSilentKill)
         {
-            if (__instance.dead)
+            Plugin.Log($"DiePatch: Killing actor \"{__instance.name}\"...");
+            ActorAdditionalData _actorAdditional = __instance.GetAdditionalData();
+
+            /*
+            if (__instance.dead || Time.time < _actorAdditional.lastTimeDead + 1)
             {
+                Plugin.Log($"DiePatch: Actor was last time hit at = " + _actorAdditional.lastTimeDead + "; Current time = " + Time.time);
                 return false;
             }
+            */
 
+            _actorAdditional.lastTimeDead = Time.time;
             EventManager.onActorDie.Invoke(new OnActorDieEvent(info, __instance, isSilentKill));
+
             return true;
         }
 
@@ -37,100 +52,149 @@ namespace RiseOfWar
         [HarmonyPrefix]
         static bool DamagePatch(Actor __instance, DamageInfo info)
         {
-            if (__instance.dead)
+            if (__instance == null)
             {
                 return false;
             }
-
-            if (__instance.GetAdditionalData() == null || !__instance.GetAdditionalData().CanGetDamaged())
-            {
-                __instance.AddData(new ActorAdditionalData());
-
-                if (__instance.GetAdditionalData() == null)
-                {
-                    Plugin.LogWarning("ActorPatcher: Cannot deal damage to actor without additional data.");
-                    return false;
-                }
-            }
-
-            if (__instance.GetAdditionalData() != null)
-            {
-                __instance.GetAdditionalData().lastTimeHit = Time.time;
-            }
-
-            Plugin.Log("ActorPatcher: An actor took damage. Damage took = " + info.healthDamage + "; Point where projectile landed = " + info.point);
 
             if (info.sourceActor.team == __instance.team && info.sourceActor != __instance)
             {
                 return false;
             }
 
-            if (__instance.isInvulnerable)
+            Plugin.Log($"ActorPatcher: Trying to deal damage to actor \"{__instance.name}\". Source = \"{info.sourceActor.name}\"");
+
+            if (__instance.dead)
             {
+                Plugin.Log("ActorPatcher: Cannot deal damage to dead actors!");
+                Plugin.EndLogGroup();
+
                 return false;
             }
+
+            if (__instance.seat != null && __instance.seat.enclosed && !__instance.seat.vehicle.burning)
+            {
+                Plugin.Log("ActorPatcher: Cannot directly deal damage to actors inside vehicles!");
+                Plugin.EndLogGroup();
+
+                return false;
+            }
+
+            ActorAdditionalData _additionalData = __instance.GetAdditionalData();
+
+            if (_additionalData == null)
+            {
+                __instance.AddData(new ActorAdditionalData());
+                _additionalData = __instance.GetAdditionalData();
+
+                if (_additionalData == null)
+                {
+                    Plugin.LogWarning($"ActorPatcher: Something went wrong with actor's additional data being null (actor = {__instance.name})! Cannot deal damage.");
+                    Plugin.EndLogGroup();
+
+                    return false;
+                }
+            }
+
+            if (_additionalData.CanGetDamaged() == false)
+            {
+                Plugin.Log($"ActorPatcher: Could not damage actor because it has been damaged too recently (less than 0.05 seconds ago).");
+                Plugin.EndLogGroup();
+
+                return false;
+            }
+
+            if (_additionalData != null)
+            {
+                _additionalData.lastTimeHit = Time.time;
+            }
+
+            if (__instance == ActorManager.instance.player)
+            {
+                SoundManager.instance.ForcePlaySound(ResourceManager.Instance.hurtSounds[Random.Range(0, ResourceManager.Instance.hurtSounds.Length)]);
+            }
+
+            if (__instance.isInvulnerable)
+            {
+                Plugin.Log("ActorPatcher: Cannot deal damage to invulnerable actors!");
+                Plugin.EndLogGroup();
+
+                return false;
+            }
+
+            Plugin.Log("ActorPatcher: An actor took damage. Damage took = " + info.healthDamage + "; Point where projectile landed = " + info.point);
 
             __instance.onTakeDamage.Invoke(__instance, info.sourceActor, info);
             if (__instance.onTakeDamage.isConsumed)
             {
+                Plugin.Log("ActorPatcher: On take damage event was consumed and thus damage could not be applied.");
+                Plugin.EndLogGroup();
+
                 return false;
             }
 
             IngameUi.OnDamageDealt(info, new HitInfo(__instance));
 
             __instance.controller.ReceivedDamage(false, info.healthDamage, info.balanceDamage, info.point, info.direction, info.impactForce);
+            float _healthBeforeDamage = __instance.health;
             __instance.health -= info.healthDamage;
-
-            int num4 = Mathf.Min(Mathf.CeilToInt(info.healthDamage / 10f), 16);
-            float d = 0.1f;
-
-            switch (BloodParticle.BLOOD_PARTICLE_SETTING)
-            {
-                case BloodParticle.BloodParticleType.Reduced:
-                    num4 /= 2;
-                    break;
-                case BloodParticle.BloodParticleType.BloodExplosions:
-                    d = 0.3f;
-                    break;
-            }
-
-            Vector3 baseVelocity = Vector3.ClampMagnitude(info.impactForce * d, 5f);
-
-            if (BloodParticle.BLOOD_PARTICLE_SETTING != BloodParticle.BloodParticleType.None)
-            {
-                for (int i = 0; i < num4; i++)
-                {
-                    // We use team 1 so all actors have red blood.
-                    DecalManager.CreateBloodDrop(info.point, baseVelocity, 1);
-                }
-            }
-
-            int num5 = Mathf.Clamp(num4, 1, 2);
-            for (int j = 0; j < num5; j++)
-            {
-                // We use team 1 so all actors have red blood.
-                DecalManager.EmitBloodEffect(info.point, baseVelocity, 1);
-            }
-
-            bool flag5 = info.isSplashDamage && !__instance.fallenOver && info.balanceDamage > 200f;
+            Plugin.Log($"ActorPatcher: Actor's health before damage = {_healthBeforeDamage}; Actor's current health = {__instance.health}");
 
             if (__instance.health <= 0f)
             {
-                __instance.Kill(info);
+                Plugin.Log($"ActorPatcher: Actor's health is below 0 ({__instance.health}) and show now be killed.");
+
+                // Making sure to kill actors that *should* die.
+                // Trying to use the private method Die instead of Kill to see if it
+                // would fix the invincible actors problem.
+                __instance.CallPrivateMethod("Die", new object[] { info, false });
             }
             else if (__instance.ragdoll.IsRagdoll())
             {
                 __instance.ApplyRigidbodyForce(info.impactForce);
             }
 
-            if (__instance.ragdoll.IsRagdoll() && flag5)
+            int _bloodParticlesAmount = Mathf.Min(Mathf.CeilToInt(info.healthDamage / 10f), 16);
+            float _bloodParticlesForce = 0.1f;
+
+            switch (BloodParticle.BLOOD_PARTICLE_SETTING)
             {
-                Vector3 b = UnityEngine.Random.insideUnitSphere.ToGround() * 5f;
-                Vector3 a = __instance.Position();
-                Rigidbody[] rigidbodies = __instance.ragdoll.rigidbodies;
-                for (int k = 0; k < rigidbodies.Length; k++)
+                case BloodParticle.BloodParticleType.Reduced:
+                    _bloodParticlesAmount /= 2;
+                    break;
+                case BloodParticle.BloodParticleType.BloodExplosions:
+                    _bloodParticlesForce = 0.3f;
+                    break;
+            }
+
+            Vector3 _bloodParticlesBaseVelocity = Vector3.ClampMagnitude(info.impactForce * _bloodParticlesForce, 5f);
+
+            if (BloodParticle.BLOOD_PARTICLE_SETTING != BloodParticle.BloodParticleType.None)
+            {
+                for (int i = 0; i < _bloodParticlesAmount; i++)
                 {
-                    rigidbodies[k].AddForceAtPosition(new Vector3(0f, 2f, 0f), a + b, ForceMode.VelocityChange);
+                    // We use team 1 so all actors have red blood.
+                    DecalManager.CreateBloodDrop(info.point, _bloodParticlesBaseVelocity, 1);
+                }
+            }
+
+            int _finalParticlesCount = Mathf.Clamp(_bloodParticlesAmount, 1, 2);
+            for (int _particlesCountIndex = 0; _particlesCountIndex < _finalParticlesCount; _particlesCountIndex++)
+            {
+                // We use team 1 so all actors have red blood.
+                DecalManager.EmitBloodEffect(info.point, _bloodParticlesBaseVelocity, 1);
+            }
+
+            bool _shouldTurnToRagdoll = info.isSplashDamage && !__instance.fallenOver && info.balanceDamage > 200f;
+            if (__instance.ragdoll.IsRagdoll() && _shouldTurnToRagdoll)
+            {
+                Vector3 _force = Random.insideUnitSphere.ToGround() * 5f;
+                Vector3 _position = __instance.Position();
+
+                Rigidbody[] _rigidbodies = __instance.ragdoll.rigidbodies;
+                for (int _rigidbodyIndex = 0; _rigidbodyIndex < _rigidbodies.Length; _rigidbodyIndex++)
+                {
+                    _rigidbodies[_rigidbodyIndex].AddForceAtPosition(new Vector3(0f, 2f, 0f), _position + _force, ForceMode.VelocityChange);
                 }
             }
 
@@ -140,12 +204,12 @@ namespace RiseOfWar
                 float intensity = Mathf.Clamp01(0.3f + (1f - __instance.health / __instance.maxHealth));
                 IngameUi.instance.ShowVignette(intensity, 6f);
             }
-
             else if (info.balanceDamage > 20f)
             {
                 __instance.GetProperty<TimedAction>("parachuteDeployStunAction").Start();
             }
 
+            Plugin.EndLogGroup();
             return false;
         }
     }

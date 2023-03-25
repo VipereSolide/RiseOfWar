@@ -12,6 +12,8 @@ namespace RiseOfWar
         public static string defaultCaptureJinglesPath = "/Resources/Sounds/Music/Capture Jingles/";
         public static string defaultPatchesPath = "/Resources/Data/Patches/";
         public static string defaultBadgesPath = "/Resources/Images/Badges/";
+        public static string defaultWhistlePath = "/Resources/Sounds/Whistling/";
+        public static string defaultHurtPath = "/Resources/Sounds/Damage/Pain/";
 
         /// <summary>
         /// Represents the field of view of the camera when any unscoped weapon is aiming.
@@ -21,6 +23,8 @@ namespace RiseOfWar
         public static float constantAimingFOVSpeedMultiplier = 1.5f;
 
         public static float projectileLifetime = 20f;
+
+        public static float whistleDelay = 7;
 
         /// <summary>
         /// The time the hitmarkers stay active on screen before disappearing.

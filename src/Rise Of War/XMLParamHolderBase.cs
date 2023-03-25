@@ -42,6 +42,7 @@ namespace RiseOfWar
             Debug.LogError($"WeaponGroupBase: Couldn't find param named \"{_name}\"!");
             return null;
         }
+
         public virtual bool TryFindParam(string _name, out Param _output)
         {
             for (int _i = 0; _i < Param.Count; _i++)
@@ -56,6 +57,7 @@ namespace RiseOfWar
             _output = null;
             return false;
         }
+
         public virtual string GetString(string name)
         {
             Param _output = null;
@@ -67,6 +69,7 @@ namespace RiseOfWar
 
             return string.Empty;
         }
+
         public virtual int GetInt(string _name)
         {
             Param _output = null;
@@ -78,6 +81,7 @@ namespace RiseOfWar
 
             return 0;
         }
+
         public virtual float GetFloat(string _name)
         {
             // Debug.Log($"name: {_name}");
@@ -102,6 +106,7 @@ namespace RiseOfWar
 
             return 0;
         }
+
         public virtual Vector2 GetVector2(string _name)
         {
             Param _output = null;
@@ -113,9 +118,10 @@ namespace RiseOfWar
 
             return Vector2.zero;
         }
+
         public virtual Vector3 GetVector3(string _name)
         {
-            Param _output = null;
+            Param _output;
 
             if (TryFindParam(_name, out _output))
             {
@@ -124,6 +130,7 @@ namespace RiseOfWar
 
             return Vector3.zero;
         }
+
         public virtual bool GetBool(string _name)
         {
             Param _output = null;
@@ -134,6 +141,24 @@ namespace RiseOfWar
             }
 
             return false;
+        }
+
+        public virtual void SetVector3(string name, Vector3 value)
+        {
+            Param _param;
+
+            if (TryFindParam(name, out _param) == false)
+            {
+                return;
+            }
+
+            int _index = Param.IndexOf(_param);
+
+            _param.vx = value.x.ToString();
+            _param.vy = value.y.ToString();
+            _param.vz = value.z.ToString();
+
+            Param[_index] = _param;
         }
     }
 }

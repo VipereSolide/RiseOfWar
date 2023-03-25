@@ -8,12 +8,13 @@ namespace RiseOfWar
     {
         public Transform aimingAnchor;
         public Transform recoilAnchor;
-        public AudioSource source;
+        public AudioSource source { get; set; }
         public bool isCustomWeapon;
         public bool wasAiming;
         public WeaponModifications modifications;
         public bool hasCustomDisplayName;
         public GameObject projectile;
+        public float damageToVehicles;
 
         public float currentConefire;
 

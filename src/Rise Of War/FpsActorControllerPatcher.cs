@@ -1,8 +1,11 @@
-﻿using BepInEx;
-using HarmonyLib;
+﻿using System.Collections.Generic;
 using System.Text;
-using UnityEngine;
+
 using UnityStandardAssets.Characters.FirstPerson;
+
+using UnityEngine;
+using HarmonyLib;
+using BepInEx;
 
 namespace RiseOfWar
 {
@@ -13,7 +16,10 @@ namespace RiseOfWar
 
         [HarmonyPatch(typeof(FpsActorController), "Awake")]
         [HarmonyPostfix]
-        static void AwakePatch(FpsActorController __instance) { }
+        static void AwakePatch(FpsActorController __instance)
+        {
+            __instance.gameObject.AddComponent<PlayerInteractions>();
+        }
 
         [HarmonyPatch(typeof(FpsActorController), "Jump")]
         [HarmonyPostfix]
@@ -163,12 +169,41 @@ namespace RiseOfWar
         [HarmonyPostfix]
         private static void OnGUIPatch(FpsActorController __instance)
         {
-            if (__instance.actor == null && __instance.actor.activeWeapon == null)
+            DrawBasicInformation(__instance);
+            DrawWeaponProperties(__instance);
+
+        }
+
+        private static void DrawWeaponProperties(FpsActorController controller)
+        {
+            if (controller == null || controller.actor == null || controller.actor.activeWeapon == null)
             {
                 return;
             }
 
-            Weapon _current = __instance.actor.activeWeapon;
+            Weapon _weapon = controller.actor.activeWeapon;
+            Weapon.Configuration _configuration = _weapon.configuration;
+
+            StringBuilder _builder = new StringBuilder();
+            List<string> _fields = Traverse.Create(_configuration).Fields();
+
+            for (int _i = 0; _i < _fields.Count; _i++)
+            {
+                object _fieldValue = Traverse.Create(_configuration).Field(_fields[_i]).GetValue();
+                _builder.AppendLine($"\"{_fields[_i]}\": {_fieldValue}");
+            }
+
+            GUI.Box(new Rect(Screen.width - 75 - 300, 0, 300, 1080), _builder.ToString());
+        }
+
+        private static void DrawBasicInformation(FpsActorController controller)
+        {
+            if (controller.actor == null && controller.actor.activeWeapon == null)
+            {
+                return;
+            }
+
+            Weapon _current = controller.actor.activeWeapon;
 
             if (_current == null)
             {
@@ -181,6 +216,10 @@ namespace RiseOfWar
             }
 
             StringBuilder _builder = new StringBuilder();
+
+            _builder.AppendLine("XP: " + controller.actor.GetAdditionalData().xp);
+
+            _builder.AppendLine();
 
             _builder.AppendLine("Is complex reload: " + _current.configuration.advancedReload);
             _builder.AppendLine("Drop ammo when reloading: " + _current.configuration.dropAmmoWhenReloading);

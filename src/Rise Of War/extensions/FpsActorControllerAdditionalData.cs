@@ -18,7 +18,8 @@ namespace RiseOfWar
         public void InitPlayerBadges()
         {
             playerBadges = new List<PlayerBadge>();
-            playerBadges.Add(PlayerBadgesRegistry.GetPlayerBadgeByName("Tight Grip"));
+            playerBadges.Add(PlayerBadgesRegistry.GetPlayerBadgeByName("Fast Reload").SetLevel(3));
+            playerBadges.Add(PlayerBadgesRegistry.GetPlayerBadgeByName("Tight Grip").SetLevel(3));
         }
 
         public FpsActorControllerAdditionalData()

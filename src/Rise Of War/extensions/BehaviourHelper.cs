@@ -1,12 +1,25 @@
-﻿using System;
-using System.Reflection;
-using HarmonyLib;
+﻿using System.Reflection;
+using System;
+
 using UnityEngine;
+using HarmonyLib;
 
 namespace RiseOfWar
 {
     public static class BehaviourHelper
     {
+        public static T GetOrCreateComponent<T>(this Behaviour behaviour) where T : Component
+        {
+            bool _hasComponent = behaviour.TryGetComponent(out T _output);
+
+            if (_hasComponent == false)
+            {
+                _output = behaviour.gameObject.AddComponent<T>();
+            }
+
+            return _output;
+        }
+
         public static T GetProperty<T>(this MonoBehaviour _instance, string _propertyName)
         {
             return (T)Traverse.Create(_instance).Field(_propertyName).GetValue();

@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using HarmonyLib;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace RiseOfWar
@@ -58,17 +59,22 @@ namespace RiseOfWar
             ResourceManager.Instance.EnableLoadingScreen();
         }
 
-        public static void Log(string _message)
+        public static void Log(string _message, [CallerMemberName] string caller = null)
         {
-            _source.LogInfo(_message);
+            _source.LogInfo(_message + $" ({caller})");
         }
-        public static void LogWarning(string _message)
+        public static void LogWarning(string _message, [CallerMemberName] string caller = null)
         {
-            _source.LogWarning(_message);
+            _source.LogWarning(_message + $" ({caller})");
         }
-        public static void LogError(string _message)
+        public static void LogError(string _message, [CallerMemberName] string caller = null)
         {
-            _source.LogError(_message);
+            _source.LogError(_message + $" ({caller})");
+        }
+
+        public static void EndLogGroup()
+        {
+            _source.LogInfo("______________________\n");
         }
 
         private void RegisterPatches()

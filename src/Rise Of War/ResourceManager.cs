@@ -20,12 +20,16 @@ namespace RiseOfWar
         private AudioClip _captureJingleGE;
         private AudioClip _captureJingleLost;
         private AudioClip _captureJingleNeutralized;
+        private AudioClip[] _whistleSounds;
+        private AudioClip[] _hurtSounds;
 
         private GameObject _projectilePrefab;
 
         private List<WeaponXMLProperties> _registeredWeaponProperties = new List<WeaponXMLProperties>();
         private List<RegisteredWeaponModifications> _registeredWeaponModifications = new List<RegisteredWeaponModifications>();
 
+        public AudioClip[] whistleSounds { get { return _whistleSounds; } }
+        public AudioClip[] hurtSounds { get { return _hurtSounds; } }
         public AudioClip captureJingleRu { get { return _captureJingleRU; } }
         public AudioClip captureJingleGe { get { return _captureJingleGE; } }
         public AudioClip captureJingleUs { get { return _captureJingleUS; } }
@@ -37,7 +41,9 @@ namespace RiseOfWar
         public AssetBundle killfeedAssetBundle { get; private set; }
         public AssetBundle playerUIAssetBundle { get; private set; }
         public AssetBundle projectileAssetBundle { get; private set; }
+        public AssetBundle weaponEditorManagerAssetBundle { get; private set; }
         public Texture2D hitmarkerTexture { get; private set; }
+        public GameObject weaponEditorManager { get; private set; }
 
         private void Awake()
         {
@@ -49,6 +55,8 @@ namespace RiseOfWar
             GetHitmarkerTexture();
             AcquireWeaponModifications();
             LoadCaptureJingleSounds();
+            GetWhistleSounds();
+            GetHurtSounds();
         }
 
         private void AcquireWeaponModifications()
@@ -112,6 +120,18 @@ namespace RiseOfWar
                     }
                 }
             }
+        }
+
+        public void LoadWeaponEditorManager()
+        {
+            if (weaponEditorManagerAssetBundle == null)
+            {
+                weaponEditorManagerAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "weapon_editor");
+            }
+
+            GameObject _weaponEditorManagerPrefab = weaponEditorManagerAssetBundle.LoadAsset("assets/weapon editor/prefabs/weapon editor.prefab") as GameObject;
+            weaponEditorManager = Instantiate(_weaponEditorManagerPrefab);
+            _weaponEditorManagerPrefab.AddComponent<WeaponEditorManager>().Awake();
         }
 
         private WeaponXMLProperties InterpretXMLFile(string _content)
@@ -279,6 +299,16 @@ namespace RiseOfWar
             projectileTracerMaterials = _materials.ToArray();
         }
 
+        public void WriteChangesToFile(WeaponXMLProperties properties)
+        {
+            using (StringWriter _stringWriter = new StringWriter())
+            {
+                XmlSerializer _serializer = new XmlSerializer(typeof(WeaponXMLProperties));
+                _serializer.Serialize(_stringWriter, properties);
+                File.WriteAllText(Application.dataPath + "/Resources/Data/weapon.xml", _stringWriter.ToString());
+            }
+        }
+
         public Weapon.Configuration GetConfigurationFromProperties(Weapon _weapon, WeaponXMLProperties _weaponProperties)
         {
             Plugin.Log($"ResourceManager: Getting weapon configuration from properties of \"{_weapon.name}\"...");
@@ -296,10 +326,30 @@ namespace RiseOfWar
             }
 
             Weapon.Configuration _base = _weapon.configuration;
+            WeaponAdditionalData _additionalData = _weapon.GetAdditionalData();
+            Projectile _projectile = _base.projectile();
 
-            _weapon.GetAdditionalData().projectile = _base.projectilePrefab;
-            _weapon.GetAdditionalData().projectile = CopyProjectileConfiguration(_base.projectile(), _weapon.GetAdditionalData().projectile.GetComponent<Projectile>()).gameObject;
-            _base.projectilePrefab = _weapon.GetAdditionalData().projectile;
+            _base.kickback = 0;
+            _base.spread = 0;
+            _base.randomKick = 0;
+            _base.snapMagnitude = 0;
+            _base.followupMaxSpreadAim = 0;
+            _base.followupMaxSpreadHip = 0;
+
+            if (_projectile.armorDamage != Vehicle.ArmorRating.AntiTank)
+            {
+                _projectile.autoAssignArmorDamage = false;
+                _projectile.armorDamage = Vehicle.ArmorRating.HeavyArms;
+            }
+
+            if (_weaponProperties.damage.HasParam(WeaponXMLProperties.Damage.VEHICLE_DAMAGE))
+            {
+                _additionalData.damageToVehicles = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.VEHICLE_DAMAGE);
+            }
+            else
+            {
+                _additionalData.damageToVehicles = _projectile.configuration.damageDropOff[0].value;
+            }
 
             _base.ammo = _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
             _base.maxAmmoPerReload = _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
@@ -311,41 +361,41 @@ namespace RiseOfWar
             float _shortDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DISTANCE);
             float _longDamage = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DAMAGE);
             float _longDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DISTANCE);
-            float _velocity = _weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.VELOCITY);
             float _roundsPerMinute = _weaponProperties.GetFloat(WeaponXMLProperties.ROUNDS_PER_MINUTE);
+            float _velocity = _weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.VELOCITY);
 
-            if (_weapon.GetAdditionalData().modifications == null)
+            if (_additionalData.modifications == null)
             {
-                _weapon.GetAdditionalData().InitWeaponModifications();
+                _additionalData.InitWeaponModifications();
 
-                if (_weapon.GetAdditionalData().modifications == null)
+                if (_additionalData.modifications == null)
                 {
-                    Plugin.LogError($"ResourceManager: Cannot get weapon configuration for weapon with null modifications ({_weapon.transform.name}).");
+                    Plugin.LogError($"ResourceManager: Cannot get weapon configuration for weapon with null modifications ({_weapon.transform.name})!");
                     return _weapon.configuration;
                 }
             }
 
-            if (_weapon.GetAdditionalData().modifications != null)
+            if (_additionalData.modifications != null)
             {
-                _shortDamage += _weapon.GetAdditionalData().modifications.GetModifiedValue(_shortDamage, Modification.Modifications.SHORT_DAMAGE);
-                _shortDistance += _weapon.GetAdditionalData().modifications.GetModifiedValue(_shortDistance, Modification.Modifications.SHORT_DISTANCE);
-                _longDamage += _weapon.GetAdditionalData().modifications.GetModifiedValue(_longDamage, Modification.Modifications.LONG_DAMAGE);
-                _velocity += _weapon.GetAdditionalData().modifications.GetModifiedValue(_velocity, Modification.Modifications.VELOCITY);
-                _longDistance += _weapon.GetAdditionalData().modifications.GetModifiedValue(_longDistance, Modification.Modifications.LONG_DISTANCE);
-                _roundsPerMinute += _weapon.GetAdditionalData().modifications.GetModifiedValue(_roundsPerMinute, Modification.Modifications.ROUNDS_PER_MINUTE);
+                _shortDamage += _additionalData.modifications.GetModifiedValue(_shortDamage, Modification.Modifications.SHORT_DAMAGE);
+                _shortDistance += _additionalData.modifications.GetModifiedValue(_shortDistance, Modification.Modifications.SHORT_DISTANCE);
+                _longDamage += _additionalData.modifications.GetModifiedValue(_longDamage, Modification.Modifications.LONG_DAMAGE);
+                _velocity += _additionalData.modifications.GetModifiedValue(_velocity, Modification.Modifications.VELOCITY);
+                _longDistance += _additionalData.modifications.GetModifiedValue(_longDistance, Modification.Modifications.LONG_DISTANCE);
+                _roundsPerMinute += _additionalData.modifications.GetModifiedValue(_roundsPerMinute, Modification.Modifications.ROUNDS_PER_MINUTE);
             }
 
             _base.cooldown = 60f / _roundsPerMinute;
 
-            _base.projectile().configuration.inheritVelocity = true;
-            _base.projectile().configuration.gravityMultiplier = 1;
-            _base.projectile().configuration.speed = _velocity;
+            // _projectile.configuration.inheritVelocity = true;
+            _projectile.configuration.gravityMultiplier = 1;
+            _projectile.configuration.speed = _velocity;
 
             _base.aimFov = GameConfiguration.defaultAimingFieldOfView;
             ((AudioSource)Traverse.Create(_weapon).Field("audio").GetValue()).clip = null;
 
-            _base.projectile().configuration.damage = _weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.DAMAGE_MULTIPLIER);
-            _base.projectile().configuration.dropoffEnd = _longDistance;
+            _projectile.configuration.damage = _weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.DAMAGE_MULTIPLIER);
+            _projectile.configuration.dropoffEnd = _longDistance;
 
             List<Keyframe> _keys = new List<Keyframe>()
             {
@@ -353,7 +403,7 @@ namespace RiseOfWar
                 new Keyframe(_base.projectile().configuration.dropoffEnd / _shortDistance,  _shortDamage),
                 new Keyframe(1,  _longDamage),
             };
-            _base.projectile().configuration.damageDropOff = new AnimationCurve(_keys.ToArray());
+            _projectile.configuration.damageDropOff = new AnimationCurve(_keys.ToArray());
 
             _base.followupMaxSpreadAim = 0;
             _base.followupMaxSpreadHip = 0;
@@ -372,6 +422,7 @@ namespace RiseOfWar
                 _base.dropAmmoWhenReloading = _weaponProperties.GetBool(WeaponXMLProperties.DROP_AMMO_WHEN_RELOADING);
             }
 
+            _base.projectilePrefab = _projectile.gameObject;
 
             return _base;
         }
@@ -384,19 +435,38 @@ namespace RiseOfWar
             }
 
             Weapon.Configuration _base = _weapon.configuration;
-            _base.projectilePrefab = _projectilePrefab;
+            //_base.projectilePrefab = _projectilePrefab;
             //_base.projectilePrefab = CopyProjectileConfiguration(_base.projectile(), _projectilePrefab.GetComponent<Projectile>()).gameObject;
+
+            Projectile _projectile = _base.projectile();
+            float _shortDamage = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DAMAGE);
+            float _shortDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DISTANCE);
+            float _longDamage = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DAMAGE);
+            float _longDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DISTANCE);
+
+            _projectile.configuration.damage = _weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.DAMAGE_MULTIPLIER);
+            _projectile.configuration.dropoffEnd = _longDistance;
+
+            List<Keyframe> _keys = new List<Keyframe>()
+            {
+                new Keyframe(0, _shortDamage),
+                new Keyframe(_base.projectile().configuration.dropoffEnd / _shortDistance,  _shortDamage),
+                new Keyframe(1,  _longDamage),
+            };
+
+            _projectile.configuration.damageDropOff = new AnimationCurve(_keys.ToArray());
+            _base.projectilePrefab = _projectile.gameObject;
+
             return _base;
         }
 
-        private Projectile CopyProjectileConfiguration(Projectile from, Projectile to)
+        private void CopyProjectileConfiguration(Projectile from, Projectile to)
         {
             to.configuration.makesFlybySound = from.configuration.makesFlybySound;
             to.configuration.flybyPitch = from.configuration.flybyPitch;
             to.configuration.impactDecalSize = from.configuration.impactDecalSize;
             to.configuration.passThroughPenetrateLayer = from.configuration.passThroughPenetrateLayer;
             to.configuration.piercing = from.configuration.piercing;
-            return to;
         }
 
         public List<RegisteredWeaponModifications> GetPossibleWeaponModifications(string weaponName)
@@ -522,7 +592,7 @@ namespace RiseOfWar
                 }
             }
 
-            Plugin.LogError("ResourceManager: Could not find weapon properties for weapon \"{_weapon.name}\"!");
+            // Plugin.LogError($"ResourceManager: Could not find weapon properties for weapon \"{_weapon.name}\"!");
             return null;
         }
 
@@ -535,6 +605,44 @@ namespace RiseOfWar
             _captureJingleNeutralized = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_neutralized.wav");
 
             transform.gameObject.AddComponent<MusicJingleManager>();
+        }
+
+        private void GetWhistleSounds()
+        {
+            string _path = Application.dataPath + GameConfiguration.defaultWhistlePath;
+            string[] _files = Directory.GetFiles(_path);
+            List<AudioClip> _clips = new List<AudioClip>();
+
+            foreach (string _file in _files)
+            {
+                if (Path.GetExtension(_file).Contains("wav") == false)
+                {
+                    continue;
+                }
+
+                _clips.Add(LoadAudioClip(_file));
+            }
+
+            _whistleSounds = _clips.ToArray();
+        }
+
+        private void GetHurtSounds()
+        {
+            string _path = Application.dataPath + GameConfiguration.defaultHurtPath;
+            string[] _files = Directory.GetFiles(_path);
+            List<AudioClip> _clips = new List<AudioClip>();
+
+            foreach (string _file in _files)
+            {
+                if (Path.GetExtension(_file).Contains("wav") == false)
+                {
+                    continue;
+                }
+
+                _clips.Add(LoadAudioClip(_file));
+            }
+
+            _hurtSounds = _clips.ToArray();
         }
     }
 }

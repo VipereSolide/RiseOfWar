@@ -74,6 +74,12 @@ namespace RiseOfWar
             Init();
         }
 
+        public virtual PlayerBadge SetLevel(int level)
+        {
+            this._level = level;
+            return this;
+        }
+
         public virtual void Execute(object input)
         {
             _onCalled.Invoke(input);

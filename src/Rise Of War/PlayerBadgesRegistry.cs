@@ -38,7 +38,7 @@ namespace RiseOfWar
 
             return _playerBadges[index];
         }
-    
+
         public static void InitPlayerBadges()
         {
             _playerBadges = new List<PlayerBadge>()
@@ -53,10 +53,29 @@ namespace RiseOfWar
                     {
                         OnTightGripBadgeCalled(_caller, GetPlayerBadgeByIndex(0));
                     }
-                )
+                ),
+                new PlayerBadge(
+                    name: "Fast Reload",
+                    description: "Shortens the reload time.",
+                    badgeIconPathBronze: Application.dataPath + GameConfiguration.defaultBadgesPath + "fast_reload_bronze.png",
+                    badgeIconPathSilver: Application.dataPath + GameConfiguration.defaultBadgesPath + "fast_reload_silver.png",
+                    badgeIconPathGold: Application.dataPath + GameConfiguration.defaultBadgesPath + "fast_reload_gold.png",
+                    onCalled: (object _caller) =>
+                    {
+                        OnFastReloadBadgeCalled(_caller, GetPlayerBadgeByIndex(1));
+                    }
+                ),
             };
         }
 
+        private static void OnFastReloadBadgeCalled(object _caller, PlayerBadge _badge)
+        {
+            if (_caller is Weapon)
+            {
+                Weapon _weapon = _caller as Weapon;
+                _weapon.animator.speed = (_badge.level == 1) ? 1.18f : (_badge.level == 2) ? 1.3f : 1.43f;
+            }
+        }
         private static void OnTightGripBadgeCalled(object _caller, PlayerBadge _badge)
         {
             if (_caller is PlayerFpParent)

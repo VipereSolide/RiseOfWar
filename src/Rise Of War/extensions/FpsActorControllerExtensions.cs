@@ -9,6 +9,11 @@ namespace RiseOfWar
 {
     public static class FpsActorControllerExtensions
     {
+        public static void AddXP(this FpsActorController _instance, int xp)
+        {
+            _instance.actor.GetAdditionalData().xp += xp;
+        }
+
         public static FirstPersonController GetController(this FpsActorController _instance)
         {
             return _instance.GetProperty<FirstPersonController>("controller");

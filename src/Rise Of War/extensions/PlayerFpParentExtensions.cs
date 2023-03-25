@@ -55,7 +55,10 @@ namespace RiseOfWar
 
             if (FpsActorController.instance.GetAdditionalData() != null)
             {
-                FpsActorController.instance.GetAdditionalData().playerBadges[0].Execute(_playerFpParent);
+                foreach (var _badge in FpsActorController.instance.GetAdditionalData().playerBadges)
+                {
+                    _badge.Execute(_playerFpParent);
+                }
             }
 
             _variance *= _playerFpParent.GetAdditionalData().horizontalRecoilMultiplier;

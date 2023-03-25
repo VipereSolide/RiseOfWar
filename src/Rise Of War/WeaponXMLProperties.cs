@@ -23,6 +23,8 @@ namespace RiseOfWar
         public static readonly string DROP_AMMO_WHEN_RELOADING = "dropAmmoWhenReloading";
         public static readonly string USE_MAX_AMMO_PER_RELOAD = "useMaxAmmoPerReload";
 
+        public static readonly string HAS_SPECIAL_PROJECTILES = "hasSpecialProjectiles";
+
         [XmlElement(ElementName = "name")]
         public string name;
 
@@ -59,6 +61,7 @@ namespace RiseOfWar
             public static readonly string LONG_DISTANCE = "longDistance";
             public static readonly string SHORT_DAMAGE = "shortDamage";
             public static readonly string LONG_DAMAGE = "longDamage";
+            public static readonly string VEHICLE_DAMAGE = "vehicleDamage";
         }
 
         [XmlRoot(ElementName = "aiming")]

@@ -7,6 +7,8 @@ namespace RiseOfWar
 {
     public class WeaponPatcher
     {
+        public static int lastPlayedFireAudioClipIndex = 0;
+
         [HarmonyPatch(typeof(Weapon), "Awake")]
         [HarmonyPostfix]
         private static void PatchAwake(Weapon __instance)
@@ -16,7 +18,7 @@ namespace RiseOfWar
                 return;
             }
 
-            if (!WeaponRegistry.IsCustomWeapon(__instance))
+            if (WeaponRegistry.IsCustomWeapon(__instance) == false)
             {
                 return;
             }
@@ -31,14 +33,14 @@ namespace RiseOfWar
         [HarmonyPostfix]
         private static void PatchStart(Weapon __instance)
         {
-            Plugin.Log($"WeaponPatcher: Initializing weapon \"{__instance.name.Replace("\n", "\\n").Replace("\r", "\\r").Replace("\\", "\\\\").Replace(" ", "_")}\"...");
+            Plugin.Log($"WeaponPatcher: Initializing weapon \"{__instance.name}\"...");
 
             if (__instance == null)
             {
                 return;
             }
 
-            if (!WeaponRegistry.IsCustomWeapon(__instance))
+            if (WeaponRegistry.IsCustomWeapon(__instance) == false)
             {
                 return;
             }
@@ -50,41 +52,51 @@ namespace RiseOfWar
             }
 
             CreateAimingAnchor(__instance);
-            CreateAudioSource(__instance);
+            // CreateAudioSource(__instance);
             CreateRecoilAnchor(__instance);
 
             __instance.configuration = ResourceManager.Instance.GetConfigurationFromProperties(__instance, __instance.weaponProperties());
             __instance.ResetSetup();
 
-            if (__instance.weaponProperties() == null || __instance.GetAdditionalData() == null)
+            WeaponAdditionalData _additionalData = __instance.GetAdditionalData();
+            WeaponXMLProperties _weaponProperties = __instance.weaponProperties();
+
+            if (_weaponProperties == null || _additionalData == null)
             {
                 return;
             }
 
             try
             {
-                __instance.GetAdditionalData().modifications = new WeaponModifications();
-                __instance.GetAdditionalData().modifications.possibleModifications = ResourceManager.Instance.GetPossibleWeaponModifications(__instance.weaponProperties().name);
-            
-                PlayerUI.instance.SetAllWeaponModificationsActive(false);
-                
-                if (__instance.GetAdditionalData().modifications.possibleModifications.Count > 0)
+                _additionalData.modifications = new WeaponModifications
                 {
-                    foreach(RegisteredWeaponModifications _mod in __instance.GetAdditionalData().modifications.possibleModifications)
+                    possibleModifications = ResourceManager.Instance.GetPossibleWeaponModifications(_weaponProperties.name)
+                };
+
+                PlayerUI.instance.SetAllWeaponModificationsActive(false);
+
+                if (_additionalData.modifications.possibleModifications.Count > 0)
+                {
+                    foreach (RegisteredWeaponModifications _modification in _additionalData.modifications.possibleModifications)
                     {
-                        PlayerUI.instance.SetWeaponModificationActive(_mod.modification.GetModificationType(), true);
-                        __instance.GetAdditionalData().modifications.SetModification(_mod.modification, _mod.modification.GetModificationType());
+                        PlayerUI.instance.SetWeaponModificationActive(_modification.modification.GetModificationType(), true);
+                        _additionalData.modifications.SetModification(_modification.modification, _modification.modification.GetModificationType());
                     }
                 }
 
-                __instance.animator.speed -= __instance.GetAdditionalData().modifications.GetModifiedValue(__instance.animator.speed, Modification.Modifications.CHAMBER_TIME);
+                __instance.animator.speed -= _additionalData.modifications.GetModifiedValue(__instance.animator.speed, Modification.Modifications.CHAMBER_TIME);
             }
             catch (Exception _exception)
             {
                 Plugin.LogWarning($"WeaponPatcher: Could not load possible modifications for current weapon (\"{__instance.transform.name}\")! " + _exception);
             }
 
-            __instance.configuration = ResourceManager.Instance.GetConfigurationFromProperties(__instance, __instance.weaponProperties());
+            // __instance.configuration = ResourceManager.Instance.GetConfigurationFromProperties(__instance, _weaponProperties);
+
+            foreach (var _badge in FpsActorController.instance.GetAdditionalData().playerBadges)
+            {
+                _badge.Execute(__instance);
+            }
         }
 
         private static void CreateAudioSource(Weapon __instance)
@@ -97,7 +109,7 @@ namespace RiseOfWar
             _source.playOnAwake = false;
             __instance.GetAdditionalData().source = _source;
         }
-        
+
         private static void CreateAimingAnchor(Weapon __instance)
         {
             if (__instance == null)
@@ -116,7 +128,7 @@ namespace RiseOfWar
 
             Plugin.Log($"WeaponPatcher: Successfully initialized aiming anchor for weapon \"{__instance.name}\"!");
         }
-     
+
         private static void CreateRecoilAnchor(Weapon __instance)
         {
             if (__instance == null)
@@ -140,107 +152,34 @@ namespace RiseOfWar
         [HarmonyPostfix]
         private static void PatchUpdate(Weapon __instance)
         {
-            if (__instance == null)
+            if (__instance == null || __instance.UserIsAI() || WeaponRegistry.IsCustomWeapon(__instance) == false)
             {
                 return;
             }
 
-            if (__instance.UserIsAI())
+            foreach (Lua.ScriptedBehaviour _scriptedBehaviour in __instance.GetComponents<Lua.ScriptedBehaviour>())
             {
-                return;
-            }
-
-            if (!WeaponRegistry.IsCustomWeapon(__instance))
-            {
-                return;
-            }
-
-            if (__instance.GetAdditionalData().currentConefire > 0)
-            {
-                __instance.GetAdditionalData().currentConefire -= Time.deltaTime * __instance.weaponProperties().GetFloat(WeaponXMLProperties.CONE_CONTRACTION_PER_SECOND);
-                
-                if (__instance.GetAdditionalData().currentConefire < 0)
+                if (_scriptedBehaviour.enabled == false)
                 {
-                    __instance.GetAdditionalData().currentConefire = 0;
+                    continue;
                 }
+
+                Plugin.Log($"WeaponPatcher: Found scripted behaviour on weapon \"{WeaponRegistry.GetRealName(__instance)}\"...");
+                _scriptedBehaviour.enabled = false;
             }
 
-            HandleAimingAnchor(__instance);
-            HandleRecoil(__instance);
+            __instance.HandleCurrentConefire();
+            __instance.HandleAimingAnchor();
+            __instance.HandleRecoil();
 
-            if (__instance == null || ActorManager.instance.player == null || ActorManager.instance.player.activeWeapon != __instance)
+            Actor _player = ActorManager.instance.player;
+
+            if (__instance == null || _player == null || _player.activeWeapon != __instance)
             {
                 return;
             }
 
-            PlayerUI.instance.SetCurrentBulletAmount(__instance.ammo);
-            PlayerUI.instance.SetCurrentAmmoInReserveAmount(__instance.spareAmmo);
-
-            if (__instance.reloading == false)
-            {
-                if (__instance.GetAdditionalData().hasCustomDisplayName == false)
-                {
-                    PlayerUI.instance.HideCustomDisplayName();
-                }
-                else
-                {
-                    PlayerUI.instance.SetWeaponCustomDisplayName(__instance.transform.name);
-                }
-            }
-        }
-
-        private static void HandleAimingAnchor(Weapon __instance)
-        {
-            if (!WeaponRegistry.IsCustomWeapon(__instance))
-            {
-                Plugin.LogError("WeaponPatcher: Cannot handle aiming anchor for no custom weapon!");
-                return;
-            }
-
-            if (__instance == null)
-            {
-                Plugin.LogError("WeaponPatcher: Cannot handle aiming anchor for null weapon!");
-                return;
-            }
-
-            if (__instance.weaponProperties() == null)
-            {
-                return;
-            }
-
-            Transform _aimingAnchor = __instance.GetAdditionalData().aimingAnchor;
-
-            if (_aimingAnchor == null)
-            {
-                Plugin.LogError("Weapon Patcher: Cannot handle null aiming anchor! Please run the aiming anchor initialization process again.");
-                return;
-            }
-
-            Vector3 _targetPosition = Vector3.zero;
-            Vector3 _targetRotation = Vector3.zero;
-
-            _targetPosition = __instance.weaponProperties().GetVector3(WeaponXMLProperties.IDLE_POSITION);
-            _targetRotation = __instance.weaponProperties().GetVector3(WeaponXMLProperties.IDLE_ROTATION);
-
-            if (__instance.aiming)
-            {
-                _targetPosition = __instance.weaponProperties().aiming.GetVector3(WeaponXMLProperties.Aiming.POSITION);
-                _targetRotation = __instance.weaponProperties().aiming.GetVector3(WeaponXMLProperties.Aiming.ROTATION);
-            }
-
-            _aimingAnchor.transform.localPosition = Vector3.Lerp(_aimingAnchor.transform.localPosition, _targetPosition, Time.deltaTime * __instance.weaponProperties().aiming.GetFloat(WeaponXMLProperties.Aiming.SPEED));
-            _aimingAnchor.transform.localRotation = Quaternion.Slerp(_aimingAnchor.transform.localRotation, Quaternion.Euler(_targetRotation), Time.deltaTime * __instance.weaponProperties().aiming.GetFloat(WeaponXMLProperties.Aiming.SPEED));
-        }
-
-        private static void HandleRecoil(Weapon __instance)
-        {
-            if (!WeaponRegistry.IsCustomWeapon(__instance) || __instance.UserIsAI() || __instance.weaponProperties() == null)
-            {
-                return;
-            }
-
-            __instance.GetAdditionalData().recoilAnchor.localPosition = Vector3.Lerp(__instance.GetAdditionalData().recoilAnchor.localPosition, Vector3.zero, Time.deltaTime * __instance.weaponProperties().visualRecoil.GetFloat(WeaponXMLProperties.VisualRecoil.SPEED));
-            __instance.GetAdditionalData().recoilAnchor.localRotation = Quaternion.Slerp(__instance.GetAdditionalData().recoilAnchor.localRotation, Quaternion.identity, Time.deltaTime * __instance.weaponProperties().visualRecoil.GetFloat(WeaponXMLProperties.VisualRecoil.SPEED));
+            __instance.HandlePlayerUI();
         }
 
         [HarmonyPatch(typeof(Weapon), "SpawnProjectile")]
@@ -265,9 +204,16 @@ namespace RiseOfWar
             direction = FpsActorController.instance.fpParent.fpCameraParent.transform.forward;
             muzzlePosition = FpsActorController.instance.fpParent.fpCameraParent.transform.position;
 
-            float _currentSpreadMagnitude = __instance.GetAdditionalData().currentConefire;
+            float _currentSpreadMagnitude = __instance.GetAdditionalData().currentConefire + FpsActorController.instance.GetAdditionalData().stamina / 10;
             Quaternion _rotation = Quaternion.LookRotation(direction) * Quaternion.AngleAxis(-_currentSpreadMagnitude, Random.insideUnitSphere);
-            
+
+            /*
+            GameObject _tester = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            _tester.transform.localScale = new Vector3(0.1f, 0.1f, 0.5f);
+            _tester.transform.position = muzzlePosition;
+            _tester.transform.rotation = _rotation;
+            */
+
             Projectile _projectile = ProjectilePoolManager.InstantiateProjectile(__instance.configuration.projectilePrefab, muzzlePosition, _rotation);
             _projectile.source = __instance.user;
             _projectile.sourceWeapon = __instance;
@@ -278,7 +224,7 @@ namespace RiseOfWar
                 if (_targetSeekingMissile != null)
                 {
                     _targetSeekingMissile.ClearTrackers();
-                 
+
                     if (__instance.targetTracker.HasVehicleTarget() && __instance.targetTracker.TargetIsLocked())
                     {
                         _targetSeekingMissile.SetTrackerTarget(__instance.targetTracker.vehicleTarget);
@@ -293,7 +239,7 @@ namespace RiseOfWar
             if (!__instance.IsMountedWeapon() && (__instance.UserIsPlayer() || !__instance.hasAnyAttachedColliders))
             {
                 _projectile.performInfantryInitialMuzzleTravel = true;
-                
+
                 Vector3 _lhs = muzzlePosition - __instance.user.controller.WeaponParent().position;
                 _projectile.initialMuzzleTravelDistance = Vector3.Dot(_lhs, direction);
             }
@@ -304,7 +250,7 @@ namespace RiseOfWar
             }
 
             _projectile.StartTravelling();
-            
+
             __result = _projectile;
             return false;
         }
@@ -320,7 +266,8 @@ namespace RiseOfWar
                 return false;
             }
 
-            __instance.GetAdditionalData().wasAiming = __instance.aiming;
+            WeaponAdditionalData _additionalData = __instance.GetAdditionalData();
+            _additionalData.wasAiming = __instance.aiming;
 
             // If the user is indeed the player, we can skip the animator part as
             // we will add our own aiming and posing system.
@@ -332,7 +279,7 @@ namespace RiseOfWar
                 return false;
             }
 
-            if (aiming && !__instance.GetAdditionalData().wasAiming)
+            if (aiming && _additionalData.wasAiming == false)
             {
                 __instance.PlayAimInSound();
             }
@@ -363,132 +310,146 @@ namespace RiseOfWar
         [HarmonyPrefix]
         private static bool ShootPatch(Weapon __instance, Vector3 direction, bool useMuzzleDirection)
         {
-            if (!WeaponRegistry.IsCustomWeapon(__instance) || __instance.UserIsAI() || __instance.weaponProperties() == null)
+            if (__instance == null)
             {
                 return true;
             }
-            else
+
+            WeaponXMLProperties _weaponProperties = __instance.weaponProperties();
+            WeaponAdditionalData _additionalData = __instance.GetAdditionalData();
+
+            if (WeaponRegistry.IsCustomWeapon(__instance) == false || __instance.UserIsAI() || _weaponProperties == null)
             {
-                if (__instance.aiming == false)
-                {
-                    Plugin.Log("WeaponPatcher: Received conefire expansion data = " + __instance.weaponProperties().GetFloat(WeaponXMLProperties.CONE_EXPANSION_PER_SHOT));
-                    __instance.GetAdditionalData().currentConefire += __instance.weaponProperties().GetFloat(WeaponXMLProperties.CONE_EXPANSION_PER_SHOT);
-                }
+                return true;
+            }
 
-                Vector3 _fireDirection = PlayerFpParent.instance.fpCamera.transform.forward;
-                
-                float _lastFiredTimestamp = (float)Traverse.Create(__instance).Field("lastFiredTimestamp").GetValue();
+            if (__instance.aiming == false)
+            {
+                float _coneExpansion = _weaponProperties.GetFloat(WeaponXMLProperties.CONE_EXPANSION_PER_SHOT);
+                _additionalData.currentConefire += _coneExpansion;
 
-                if (_lastFiredTimestamp + __instance.configuration.cooldown > Time.time || __instance.ammo <= 0)
-                {
-                    return false;
-                }
+                Plugin.Log("WeaponPatcher: Received conefire expansion data = " + _coneExpansion);
+            }
 
-                __instance.PlayFireSound();
-                byte _currentMuzzleIndex = (byte)Traverse.Create(__instance).Field("currentMuzzleIndex").GetValue();
+            Vector3 _fireDirection = PlayerFpParent.instance.fpCamera.transform.forward;
 
-                __instance.onFire.Invoke();
+            float _lastFiredTimestamp = (float)Traverse.Create(__instance).Field("lastFiredTimestamp").GetValue();
 
-                if (__instance.onFireScriptable != null && __instance.onFireScriptable.isConsumed)
-                {
-                    return false;
-                }
-
-                if (__instance.configuration.loud)
-                {
-                    __instance.user.Highlight(4f);
-                }
-
-                Traverse.Create(__instance).Field("lastFiredTimestamp").SetValue(Time.time);
-
-                if (__instance.activeAnimator())
-                {
-                    if (!__instance.configuration.fireFromAllMuzzles && __instance.configuration.muzzles.Length > 1)
-                    {
-                        __instance.animator.SetInteger(Weapon.MUZZLE_PARAMETER_HASH, _currentMuzzleIndex);
-                    }
-
-                    __instance.animator.SetTrigger(Weapon.FIRE_PARAMETER_HASH);
-                }
-
-                if (__instance.configuration.fireFromAllMuzzles)
-                {
-                    for (int i = 0; i < __instance.configuration.muzzles.Length; i++)
-                    {
-                        __instance.ExecutePrivateMethod("FireFromMuzzle", new object[] { i, _fireDirection, useMuzzleDirection });
-                    }
-                }
-                else if (__instance.configuration.muzzles.Length != 0)
-                {
-                    __instance.ExecutePrivateMethod("FireFromMuzzle", new object[] { _currentMuzzleIndex, _fireDirection, useMuzzleDirection });
-                }
-
-                if (__instance.ammo != -1)
-                {
-                    __instance.ammo--;
-                }
-
-                __instance.OnAmmoChanged();
-
-                if (__instance.reflectionVolume > 0f && __instance.reflectionSound != Weapon.ReflectionSound.None)
-                {
-                    GameManager.PlayReflectionSound(__instance.UserIsPlayer(), __instance.configuration.auto, __instance.reflectionSound, __instance.reflectionVolume, __instance.transform.position + __instance.user.controller.FacingDirection() * 30f);
-                }
-
-                __instance.ExecutePrivateMethod("UpdateSoundOutputGroup", new object[] { });
-
-                if (!__instance.configuration.auto)
-                {
-                    Traverse.Create(__instance).Field("hasFiredSingleRoundThisTrigger").SetValue(true);
-                }
-
-                if (__instance.configuration.loud && __instance.user != null && !__instance.IsMeleeWeapon())
-                {
-                    try
-                    {
-                        MuzzleFlashManager.RegisterMuzzleFlash(__instance.configuration.muzzles[_currentMuzzleIndex].position, __instance.user, __instance.IsMountedWeapon());
-                    }
-                    catch (Exception _exception)
-                    {
-                        Plugin.LogError("WeaponPatcher: " + _exception);
-                    }
-                }
-
-                __instance.ExecutePrivateMethod("NextMuzzle", new object[] { });
-
-                /*float num3 = __instance.configuration.GetConeExpansionPerShot();
-                float num4 = __instance.configuration.GetMaximumConeExpansion();
-
-                if (__instance.aiming)
-                {
-                    num3 = __instance.configuration.GetConeExpansionPerShotAimed();
-                    num4 = __instance.configuration.GetMaximumConeExpansionAimed();
-                }
-                if (__instance._currentConeExpansion < num4)
-                {
-                    __instance._currentConeExpansion = Mathf.Min(__instance._currentConeExpansion + num3, num4);
-                }*/
-
-                __instance.ExecutePrivateMethod("ApplyRecoil");
-                __instance.AddWeaponRecoilAmount(__instance.weaponProperties().visualRecoil.GetVector3(WeaponXMLProperties.VisualRecoil.POSITION), __instance.weaponProperties().visualRecoil.GetVector3(WeaponXMLProperties.VisualRecoil.ROTATION));
-                PlayerFpParent.instance.AddCameraRecoil(__instance.weaponProperties().cameraRecoil.GetFloat(WeaponXMLProperties.CameraRecoil.UPWARD), __instance.weaponProperties().cameraRecoil.GetFloat(WeaponXMLProperties.CameraRecoil.RIGHTWARD), __instance.weaponProperties().cameraRecoil.GetFloat(WeaponXMLProperties.CameraRecoil.VARIANCE));
-
-                if (__instance.aiming)
-                {
-                    Plugin.Log("WeaponPatcher: Received conefire expansion data = " + __instance.weaponProperties().aiming.GetFloat(WeaponXMLProperties.Aiming.CONE_EXPANSION_PER_SHOT_AIMED));
-                    __instance.GetAdditionalData().currentConefire += __instance.weaponProperties().aiming.GetFloat(WeaponXMLProperties.Aiming.CONE_EXPANSION_PER_SHOT_AIMED);
-                }
-
+            if (_lastFiredTimestamp + __instance.configuration.cooldown > Time.time || __instance.ammo <= 0)
+            {
                 return false;
             }
-        }
 
-        [HarmonyPatch(typeof(Weapon), "Shoot", new Type[] { typeof(Vector3), typeof(bool) })]
-        [HarmonyPostfix]
-        private static void ShootPatchAfter(Weapon __instance)
-        {
-        }
+            __instance.PlayFireSound();
 
+            byte _currentMuzzleIndex = (byte)Traverse.Create(__instance).Field("currentMuzzleIndex").GetValue();
+
+            __instance.onFire.Invoke();
+            if (__instance.onFireScriptable != null && __instance.onFireScriptable.isConsumed)
+            {
+                return false;
+            }
+
+            if (__instance.configuration.loud)
+            {
+                __instance.user.Highlight(4f);
+            }
+
+            Traverse.Create(__instance).Field("lastFiredTimestamp").SetValue(Time.time);
+
+            if (__instance.activeAnimator())
+            {
+                if (!__instance.configuration.fireFromAllMuzzles && __instance.configuration.muzzles.Length > 1)
+                {
+                    __instance.animator.SetInteger(Weapon.MUZZLE_PARAMETER_HASH, _currentMuzzleIndex);
+                }
+
+                __instance.animator.SetTrigger(Weapon.FIRE_PARAMETER_HASH);
+            }
+
+            if (__instance.configuration.fireFromAllMuzzles)
+            {
+                for (int i = 0; i < __instance.configuration.muzzles.Length; i++)
+                {
+                    __instance.ExecutePrivateMethod("FireFromMuzzle", new object[] { i, _fireDirection, useMuzzleDirection });
+                }
+            }
+            else if (__instance.configuration.muzzles.Length != 0)
+            {
+                __instance.ExecutePrivateMethod("FireFromMuzzle", new object[] { _currentMuzzleIndex, _fireDirection, useMuzzleDirection });
+            }
+
+            if (__instance.ammo != -1)
+            {
+                __instance.ammo--;
+            }
+
+            __instance.OnAmmoChanged();
+
+            if (__instance.reflectionVolume > 0f && __instance.reflectionSound != Weapon.ReflectionSound.None)
+            {
+                GameManager.PlayReflectionSound(
+                    __instance.UserIsPlayer(),
+                    __instance.configuration.auto,
+                    __instance.reflectionSound,
+                    __instance.reflectionVolume,
+                    __instance.transform.position + __instance.user.controller.FacingDirection() * 30f
+                );
+            }
+
+            __instance.ExecutePrivateMethod("UpdateSoundOutputGroup", new object[] { });
+
+            if (!__instance.configuration.auto)
+            {
+                Traverse.Create(__instance).Field("hasFiredSingleRoundThisTrigger").SetValue(true);
+            }
+
+            if (__instance.configuration.loud && __instance.user != null && !__instance.IsMeleeWeapon())
+            {
+                try
+                {
+                    MuzzleFlashManager.RegisterMuzzleFlash(__instance.configuration.muzzles[_currentMuzzleIndex].position, __instance.user, __instance.IsMountedWeapon());
+                }
+                catch (Exception _exception)
+                {
+                    Plugin.LogError("WeaponPatcher: " + _exception);
+                }
+            }
+
+            __instance.ExecutePrivateMethod("NextMuzzle", new object[] { });
+
+            __instance.ExecutePrivateMethod("ApplyRecoil");
+            __instance.AddWeaponRecoilAmount(_weaponProperties.visualRecoil.GetVector3(WeaponXMLProperties.VisualRecoil.POSITION), _weaponProperties.visualRecoil.GetVector3(WeaponXMLProperties.VisualRecoil.ROTATION));
+
+            float _upwardRecoil = _weaponProperties.cameraRecoil.GetFloat(WeaponXMLProperties.CameraRecoil.UPWARD);
+            float _rightwardRecoil = _weaponProperties.cameraRecoil.GetFloat(WeaponXMLProperties.CameraRecoil.RIGHTWARD);
+            float _recoilVariance = _weaponProperties.cameraRecoil.GetFloat(WeaponXMLProperties.CameraRecoil.VARIANCE);
+            
+            if (__instance.user.controller.Prone())
+            {
+                _upwardRecoil /= 2;
+                _recoilVariance /= 4;
+                _rightwardRecoil /= 4;
+            }
+            else if (__instance.user.controller.Crouch())
+            {
+                _upwardRecoil /= 1.25f;
+                _recoilVariance /= 2;
+                _rightwardRecoil /= 2;
+            }
+            
+            PlayerFpParent.instance.AddCameraRecoil(_upwardRecoil, _rightwardRecoil, _recoilVariance);
+
+            if (__instance.aiming)
+            {
+                float _coneExpansion = _weaponProperties.aiming.GetFloat(WeaponXMLProperties.Aiming.CONE_EXPANSION_PER_SHOT_AIMED);
+                __instance.GetAdditionalData().currentConefire += _coneExpansion;
+
+                Plugin.Log("WeaponPatcher: Received conefire expansion data (aimed) = " + _coneExpansion);
+            }
+
+            return false;
+        }
 
         [HarmonyPatch(typeof(Weapon), "Reload")]
         [HarmonyPostfix]
@@ -497,6 +458,25 @@ namespace RiseOfWar
             PlayerUI.instance.SetWeaponCustomDisplayName("RELOADING");
         }
 
+        [HarmonyPatch(typeof(Weapon), "ApplyRecoil")]
+        [HarmonyPrefix]
+        private static bool ApplyRecoil(Weapon __instance)
+        {
+            if (WeaponRegistry.IsCustomWeapon(__instance) == false)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /*
+        [HarmonyPatch(typeof(Weapon), "Shoot", new Type[] { typeof(Vector3), typeof(bool) })]
+        [HarmonyPostfix]
+        private static void ShootPatchAfter(Weapon __instance)
+        {
+        }
+        
         [HarmonyPatch(typeof(Weapon), "StartAdvancedReload")]
         [HarmonyPrefix]
         private static void StartAdvancedReloadPatch(Weapon __instance)
@@ -514,36 +494,6 @@ namespace RiseOfWar
         private static void EndAdvancedReloadPatch(Weapon __instance)
         {
         }
-
-        public static int lastPlayedIndex = 0;
-
-        public static void AddWeaponRecoilAmount(Weapon __instance, Vector3 _visualRecoil, Vector3 _rotationalRecoil)
-        {
-            if (__instance == null)
-            {
-                Plugin.LogError("WeaponPatcher: Cannot apply recoil amount for null weapon!");
-                return;
-            }
-
-            if (!WeaponRegistry.IsCustomWeapon(__instance) || __instance.UserIsAI() || __instance.weaponProperties() == null)
-            {
-                return;
-            }
-
-            __instance.GetAdditionalData().recoilAnchor.localPosition = _visualRecoil;
-            __instance.GetAdditionalData().recoilAnchor.localRotation = Quaternion.Euler(_rotationalRecoil);
-        }
-
-        [HarmonyPatch(typeof(Weapon), "ApplyRecoil")]
-        [HarmonyPrefix]
-        private static bool ApplyRecoil(Weapon __instance)
-        {
-            if (!WeaponRegistry.IsCustomWeapon(__instance))
-            {
-                return true;
-            }
-
-            return false;
-        }
+        */
     }
 }
