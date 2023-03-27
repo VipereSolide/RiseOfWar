@@ -10,6 +10,7 @@ namespace RiseOfWar
     public class VehicleAdditionalData
     {
         public List<string> vehicleParts = new List<string>();
+        public Actor owner;
 
         public string DestroyPart(out bool destroyed)
         {

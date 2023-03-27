@@ -30,7 +30,7 @@ namespace RiseOfWar
 
             if (ResourceManager.Instance.playerUIAssetBundle == null)
             {
-                ResourceManager.Instance.LoadPlayerUI();
+                ResourceManager.Instance.LoadPlayerUIAssetBundle();
             }
 
             Plugin.Log("AwakePatch: Loading up player ui...");

@@ -84,8 +84,40 @@ namespace RiseOfWar
             }
 
             EventManager.onVehicleSpawn.Invoke(new OnVehicleSpawnEvent(__instance));
-            __instance.AddData(new VehicleAdditionalData());
+            
+			__instance.AddData(new VehicleAdditionalData()
+            {
+				owner = __instance.Driver()
+            });
         }
+
+		[HarmonyPatch(typeof(Vehicle), "OnDriverEntered")]
+		[HarmonyPostfix]
+		private static void OnDriverEnteredPatch(Vehicle __instance)
+        {
+			VehicleAdditionalData _additionalData = __instance.GetAdditionalData();
+
+			if (_additionalData.owner == null && __instance.HasDriver() && !__instance.Driver().aiControlled)
+			{
+				_additionalData.owner = __instance.Driver();
+			}
+            else
+            {
+				int _seatIndex = 0;
+
+				while (__instance.seats[0].occupant != _additionalData.owner)
+                {
+					if (_seatIndex >= __instance.seats.Count)
+                    {
+						__instance.seats[0].occupant.LeaveSeat(false);
+						break;
+					}
+
+					__instance.seats[0].occupant.EnterSeat(__instance.seats[_seatIndex], false);
+					_seatIndex++;
+				}
+            }
+		}
 
         [HarmonyPatch(typeof(Vehicle), "StartBurning")]
         [HarmonyPostfix]

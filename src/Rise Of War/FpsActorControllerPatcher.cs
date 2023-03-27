@@ -9,6 +9,8 @@ using BepInEx;
 
 namespace RiseOfWar
 {
+    using Events;
+
     public class FpsActorControllerPatcher
     {
         static Vector3 _vehicleRootOffset = new Vector3(0, 1, 0);
@@ -19,6 +21,20 @@ namespace RiseOfWar
         static void AwakePatch(FpsActorController __instance)
         {
             __instance.gameObject.AddComponent<PlayerInteractions>();
+        }
+
+        [HarmonyPatch(typeof(FpsActorController), "SpawnAt")]
+        [HarmonyPostfix]
+        private static void SpawnAtPatch(FpsActorController __instance, Vector3 position, Quaternion rotation)
+        {
+            EventManager.onPlayerSpawned?.Invoke(new OnPlayerSpawnedEvent(position, rotation.eulerAngles));
+        }
+
+        [HarmonyPatch(typeof(FpsActorController), "Deafen")]
+        [HarmonyPrefix]
+        private static bool DeafenPatch()
+        {
+            return false;
         }
 
         [HarmonyPatch(typeof(FpsActorController), "Jump")]

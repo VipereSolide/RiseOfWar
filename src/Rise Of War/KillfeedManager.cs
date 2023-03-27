@@ -1,121 +1,17 @@
-﻿using System;
+﻿using System.Runtime.CompilerServices;
 using System.Collections.Generic;
-using TMPro;
+using System;
+
 using UnityEngine;
+using TMPro;
 
 namespace RiseOfWar
 {
     using Events;
     using System.Linq;
-    using System.Runtime.CompilerServices;
 
     public class KillfeedManager : MonoBehaviour
     {
-        public enum KillfeedItemType
-        {
-            Actor,
-            Vehicle,
-            Game
-        }
-        public enum ActorActions
-        {
-            Killed,
-            Wounded
-        }
-        public enum GameActions
-        {
-            Neutralized,
-            Captured,
-            SquadOrder,
-            Protect,
-            Raid,
-        }
-        public enum VehicleActions
-        {
-            Damaged,
-            Repaired,
-            Destroyed,
-            DestroyedTransmission,
-            DestroyedEngine,
-            DestroyedCockpit,
-        }
-
-        [Serializable]
-        public class KillfeedQueueItem
-        {
-            public KillfeedItemType type;
-            public ActorActions actorAction;
-            public VehicleActions vehicleAction;
-            public GameActions gameAction;
-
-            public Actor victimActor;
-            public Vehicle victimVehicle;
-            public SpawnPoint victimSpawnpoint;
-            public DamageInfo damageInfo;
-            public HitInfo hitInfo;
-            public Actor sourceActor;
-
-            public KillfeedQueueItem(ActorActions _actorAction, Actor _victim, DamageInfo _damageInfo, HitInfo _hitInfo, Actor _sourceActor)
-            {
-                type = KillfeedItemType.Actor;
-                actorAction = _actorAction;
-                victimActor = _victim;
-                damageInfo = _damageInfo;
-                hitInfo = _hitInfo;
-                sourceActor = _sourceActor;
-            }
-            public KillfeedQueueItem(VehicleActions _vehicleAction, Vehicle _victimVehicle, DamageInfo _damageInfo, Actor _sourceActor)
-            {
-                type = KillfeedItemType.Vehicle;
-                vehicleAction = _vehicleAction;
-                victimVehicle = _victimVehicle;
-                damageInfo = _damageInfo;
-                sourceActor = _sourceActor;
-            }
-            public KillfeedQueueItem(GameActions _gameAction, SpawnPoint _victimSpawnpoint)
-            {
-                type = KillfeedItemType.Game;
-                gameAction = _gameAction;
-                victimSpawnpoint = _victimSpawnpoint;
-            }
-
-            public KillfeedQueueItem()
-            {
-
-            }
-
-            public override bool Equals(object _obj)
-            {
-                if (_obj is KillfeedQueueItem)
-                {
-                    KillfeedQueueItem _compared = (KillfeedQueueItem)_obj;
-
-                    if (_compared.type != this.type)
-                    {
-                        return false;
-                    }
-
-                    switch (_compared.type)
-                    {
-                        case KillfeedItemType.Game:
-                            return _compared.gameAction == gameAction && _compared.victimSpawnpoint == victimSpawnpoint && _compared.sourceActor == sourceActor;
-
-                        case KillfeedItemType.Vehicle:
-                            return _compared.victimVehicle == victimVehicle && _compared.vehicleAction == vehicleAction && _compared.sourceActor == sourceActor;
-
-                        case KillfeedItemType.Actor:
-                            return _compared.actorAction == actorAction && _compared.victimActor == victimActor && _compared.sourceActor == sourceActor;
-                    }
-                }
-
-                return base.Equals(_obj);
-            }
-            public override int GetHashCode()
-            {
-                return base.GetHashCode();
-            }
-        }
-
         [Serializable]
         public struct KillfeedItem
         {
@@ -132,6 +28,7 @@ namespace RiseOfWar
         public static readonly string WHITE_COLOR = "C2BFB3";
         public static readonly string GREEN_COLOR = "95BD63";
         public static readonly string RED_COLOR = "832423";
+        public static readonly string BLUE_COLOR = "435462";
 
         public static KillfeedManager Instance { get; set; }
 
@@ -141,12 +38,8 @@ namespace RiseOfWar
         [SerializeField]
         private Transform _feedItemsContainer;
 
-        private List<KillfeedQueueItem> _queuedItems = new List<KillfeedQueueItem>();
         private List<CanvasGroup> _feedItems = new List<CanvasGroup>();
         private List<CanvasGroup> _toDestroy = new List<CanvasGroup>();
-        private List<KillfeedQueueItem> _lastItems = new List<KillfeedQueueItem>();
-        private float _vehicleInfluence;
-        private float _increment;
 
         private List<KillfeedItem> _killfeedItems = new List<KillfeedItem>();
         public KillfeedItem[] killfeedItems { get { return _killfeedItems.ToArray(); } }
@@ -207,20 +100,17 @@ namespace RiseOfWar
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            HandleListeners();
+            AddListeners();
 
             Plugin.Log("KillfeedManager: Killfeed successfully initialized!");
         }
 
         private void Update()
         {
-            TreatKillfeedItems();
-            HandleIncrement();
-            HandleVehicleInfluence();
-            HandleLivingItems();
+            HandleLivingKillfeedItems();
         }
 
-        private void HandleListeners()
+        private void AddListeners()
         {
             EventManager.onPlayerDealtDamage += OnPlayerDealtDamage;
             EventManager.onCapturePointInteraction += OnCapturePointInteraction;
@@ -406,7 +296,8 @@ namespace RiseOfWar
                     bool _isDestroyed = false;
                     string _destroyed = _vehicle.GetAdditionalData().DestroyPart(out _isDestroyed);
 
-                    if (_isDestroyed) {
+                    if (_isDestroyed)
+                    {
                         AddKillfeedItem($"Destroyed <#{WHITE_COLOR}>{_destroyed}</color> <#{WHITE_COLOR}>1 XP</color>", 1);
                     }
                     else
@@ -462,7 +353,7 @@ namespace RiseOfWar
             string _victimName = _event.hit.actor.name;
             AddKillfeedItem($"Wounded <#{WHITE_COLOR}>{_victimName}</color> <#{WHITE_COLOR}>2 XP</color>", 2);
             _woundedActors.Add(_event.hit.actor);
-            
+
             if (_lastHitActors.ContainsKey(_event.hit.actor))
             {
                 _lastHitActors[_event.hit.actor] = Time.time;
@@ -473,119 +364,10 @@ namespace RiseOfWar
             }
 
             return;
-
-            /*
-            if (_event.hit.actor == null)
-            {
-                Vehicle _vehicle = _event.hit.vehicle;
-                if (_event.hit.vehicle != null)
-                {
-                    if (_event.damage.healthDamage < 0)
-                    {
-                        CreateVehicleFeed(VehicleActions.Repaired, _vehicle, _event.damage);
-                        return;
-                    }
-
-                    Vehicle.ArmorRating _armorRating = _event.damage.sourceWeapon.configuration.projectile().armorDamage;
-                    bool _isDamaged = _vehicle.IsDamagedByRating(_armorRating);
-
-                    if (!_isDamaged)
-                    {
-                        return;
-                    }
-
-                    float _armorDamage = _vehicle.GetDamageMultiplier(_armorRating) * _event.damage.healthDamage;
-
-                    if (_vehicle.health - _armorDamage <= 0)
-                    {
-                        CreateVehicleFeed(VehicleActions.Destroyed, _vehicle, _event.damage);
-                    }
-                    else
-                    {
-                        // CreateVehicleFeed(VehicleActions.Damaged, _vehicle, _event.damage);
-
-                        float _healthNow = _vehicle.health / _vehicle.maxHealth;
-                        float _healthBefore = (_vehicle.health + _event.damage.healthDamage / _vehicle.GetDamageMultiplier(_armorRating)) / _vehicle.maxHealth;
-
-                        if (_healthNow < 0.7 && _healthBefore >= 0.7)
-                        {
-                            CreateVehicleFeed(VehicleActions.DestroyedTransmission, _vehicle, _event.damage);
-                        }
-
-                        if (_healthNow < 0.4 && _healthBefore >= 0.4)
-                        {
-                            CreateVehicleFeed(VehicleActions.DestroyedEngine, _vehicle, _event.damage);
-                        }
-
-                        if (_healthNow < 0.1 && _healthBefore >= 0.1)
-                        {
-                            CreateVehicleFeed(VehicleActions.DestroyedCockpit, _vehicle, _event.damage);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                if (_event.hit.actor == _event.damage.sourceActor)
-                {
-                    return;
-                }
-
-                CreateActorFeed(ActorActions.Wounded, _event.damage, _event.hit, _event.hit.actor);
-            }
-        
-           */
         }
 
-        private void HandleQueuedItems()
-        {
-            if (_queuedItems.Count > 0)
-            {
-                TreatKillfeedItems();
-                _lastItems.Add(_queuedItems[0]);
-                _queuedItems.RemoveAt(0);
-            }
-        }
 
-        private void HandleIncrement()
-        {
-            _increment += Time.deltaTime;
-
-            if (_increment > GameConfiguration.killfeedClearInterval)
-            {
-                _lastItems.Clear();
-                _increment = 0;
-            }
-        }
-
-        private void HandleVehicleInfluence()
-        {
-            if (_vehicleInfluence > 0f)
-            {
-                _vehicleInfluence -= Time.deltaTime;
-            }
-
-            _vehicleInfluence = Mathf.Clamp(_vehicleInfluence, 0f, 100f);
-        }
-
-        private void HandleLivingItems()
-        {
-            try
-            {
-                foreach (CanvasGroup canvasGroup in _toDestroy)
-                {
-                    canvasGroup.alpha = Mathf.MoveTowards(canvasGroup.alpha, 0f, Time.deltaTime * 2f);
-                    if (canvasGroup.alpha <= 0.05f)
-                    {
-                        _toDestroy.Remove(canvasGroup);
-                        Destroy(canvasGroup.gameObject);
-                    }
-                }
-            }
-            catch { }
-        }
-
-        private void TreatKillfeedItems()
+        private void HandleLivingKillfeedItems()
         {
             if (_killfeedItems.Count <= 0)
             {
@@ -606,159 +388,6 @@ namespace RiseOfWar
             _killfeedItems.RemoveAt(0);
         }
 
-        /*
-        private void TreatKillfeedItems()
-        {
-            foreach (KillfeedQueueItem _item in _lastItems)
-            {
-                if (_item.Equals(_queuedItems[0]))
-                {
-                    return;
-                }
-            }
-
-            Actor _player = FpsActorController.instance.actor;
-
-            int _xp = 0;
-            string _feedMessage = string.Empty;
-
-            if (_queuedItems[0].type == KillfeedItemType.Actor)
-            {
-                if (_queuedItems[0].actorAction == ActorActions.Wounded)
-                {
-                    if (_queuedItems[0].victimActor.team != _queuedItems[0].sourceActor.team)
-                    {
-                        _xp = 2;
-                        _feedMessage = $"Wounded <#{WHITE_COLOR}>{_queuedItems[0].victimActor.name}</color> <#{WHITE_COLOR}>{_xp} XP</color>";
-                    }
-                }
-                else
-                {
-                    if (_queuedItems[0].victimActor.team == _queuedItems[0].sourceActor.team)
-                    {
-                        if (_queuedItems[0].victimActor == _queuedItems[0].sourceActor)
-                        {
-                            _xp = -1;
-                            _feedMessage = $"Accident <#{RED_COLOR}>{_xp} XP</color>";
-                        }
-                        else
-                        {
-                            _xp = -10;
-                            _feedMessage = $"Team kill <#{RED_COLOR}>{_xp} XP</color>";
-                        }
-                    }
-                    else
-                    {
-                        _xp = 3;
-                        _feedMessage = $"Killed <#{RED_COLOR}>{_queuedItems[0].victimActor.name}</color> <#{WHITE_COLOR}>{_xp} XP</color>";
-
-                        SpawnPoint _point = ActorManager.ClosestSpawnPoint(_player.CenterPosition());
-                        bool _continue = true;
-
-                        if (_point.owner == _player.team)
-                        {
-                            if (Vector3.Distance(_player.CenterPosition(), _point.transform.position) < _point.protectRange + 10 && _point.IsContested(_player.team))
-                            {
-                                CreateGameFeed(GameActions.Protect, _point);
-                                _continue = false;
-                            }
-                        }
-                        else
-                        {
-                            if (Vector3.Distance(_player.CenterPosition(), _point.transform.position) < _point.GetCaptureRange() + 10 && _point.IsContested(_player.team == 0 ? 1 : 0))
-                            {
-                                CreateGameFeed(GameActions.Raid, _point);
-                                _continue = false;
-                            }
-                        }
-
-                        if (_continue)
-                        {
-                            SpawnPoint _point2 = ActorManager.ClosestSpawnPoint(_queuedItems[0].victimActor.CenterPosition());
-
-                            if (Vector3.Distance(_queuedItems[0].victimActor.CenterPosition(), _point2.transform.position) < _point2.GetCaptureRange() && _point2.owner != _queuedItems[0].victimActor.team)
-                            {
-                                if (Vector3.Distance(_player.CenterPosition(), _point.transform.position) < _point.protectRange + 10 && _point.IsContested(_player.team))
-                                {
-                                    CreateGameFeed(GameActions.Protect, _point);
-                                    _continue = false;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            else if (_queuedItems[0].type == KillfeedItemType.Vehicle)
-            {
-                if (_queuedItems[0].vehicleAction == VehicleActions.Damaged)
-                {
-                    _xp = 2;
-                    _feedMessage = $"Damaged <#{WHITE_COLOR}>Vehicle</color> <#{WHITE_COLOR}>{_xp} XP</color>";
-                }
-                else if (_queuedItems[0].vehicleAction == VehicleActions.DestroyedCockpit)
-                {
-                    _xp = 2;
-                    _feedMessage = $"Destroyed <#{WHITE_COLOR}>Cockpit</color> <#{WHITE_COLOR}>{_xp} XP</color>";
-                }
-                else if (_queuedItems[0].vehicleAction == VehicleActions.DestroyedTransmission)
-                {
-                    _xp = 2;
-                    _feedMessage = $"Destroyed <#{WHITE_COLOR}>Transmission</color> <#{WHITE_COLOR}>{_xp} XP</color>";
-                }
-                else if (_queuedItems[0].vehicleAction == VehicleActions.DestroyedEngine)
-                {
-                    _xp = 2;
-                    _feedMessage = $"Destroyed <#{WHITE_COLOR}>Repaired</color> <#{WHITE_COLOR}>{_xp} XP</color>";
-                }
-                else if (_queuedItems[0].vehicleAction == VehicleActions.Repaired)
-                {
-                    _xp = 1;
-                    _feedMessage = $"Repaired <#{WHITE_COLOR}>Vehicle</color> <#{WHITE_COLOR}>{_xp} XP</color>";
-                }
-                else if (_queuedItems[0].vehicleAction == VehicleActions.Destroyed)
-                {
-                    _xp = 20;
-                    _feedMessage = $"Destroyed <#{WHITE_COLOR}>Vehicle</color> <#{WHITE_COLOR}>{_xp} XP</color>";
-                }
-            }
-            else if (_queuedItems[0].type == KillfeedItemType.Game)
-            {
-                if (_queuedItems[0].gameAction == GameActions.Captured)
-                {
-                    _xp = 67;
-                    _feedMessage = $"Captured <#{WHITE_COLOR}>{_xp} XP</color>";
-                }
-                else if (_queuedItems[0].gameAction == GameActions.Neutralized)
-                {
-                    _xp = 45;
-                    _feedMessage = $"Neutralized <#{WHITE_COLOR}>{_xp} XP</color>";
-                }
-                else if (_queuedItems[0].gameAction == GameActions.SquadOrder)
-                {
-                    _xp = 5;
-                    _feedMessage = $"Squad <#{GREEN_COLOR}>Order</color> <#{WHITE_COLOR}>{_xp} XP</color>";
-                }
-                else if (_queuedItems[0].gameAction == GameActions.Protect)
-                {
-                    _xp = 60;
-                    _feedMessage = $"Defend <#{WHITE_COLOR}>{_xp} XP</color>";
-                }
-                else if (_queuedItems[0].gameAction == GameActions.Raid)
-                {
-                    _xp = 40;
-                    _feedMessage = $"Raid <#{WHITE_COLOR}>{_xp} XP</color>";
-                }
-            }
-
-            if (string.IsNullOrEmpty(_feedMessage))
-            {
-                return;
-            }
-
-            FpsActorController.instance.AddXP(_xp);
-            CreateCustomFeed(_feedMessage);
-        }
-        */
         private void DestroyFeed()
         {
             _toDestroy.Add(_feedItems[0]);
@@ -784,24 +413,6 @@ namespace RiseOfWar
             }
 
             Invoke(nameof(DestroyFeed), 5f);
-        }
-
-        public void CreateActorFeed(ActorActions _action, DamageInfo _damageInfo, HitInfo _hitInfo, Actor _victimActor)
-        {
-            Actor _sourceActor = _damageInfo.sourceActor;
-            _queuedItems.Add(new KillfeedQueueItem(_action, _victimActor, _damageInfo, _hitInfo, _sourceActor));
-        }
-
-        public void CreateGameFeed(GameActions _action, SpawnPoint _spawnpoint)
-        {
-            _lastItems.Clear();
-            _queuedItems.Add(new KillfeedQueueItem(_action, _spawnpoint));
-        }
-
-        public void CreateVehicleFeed(VehicleActions _action, Vehicle _victimVehicle, DamageInfo _damageInfo)
-        {
-            _lastItems.Clear();
-            _queuedItems.Add(new KillfeedQueueItem(_action, _victimVehicle, _damageInfo, _damageInfo.sourceActor));
         }
     }
 }

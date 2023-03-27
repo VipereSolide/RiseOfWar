@@ -32,19 +32,29 @@ namespace RiseOfWar
 
         private static readonly ConditionalWeakTable<Vehicle, VehicleAdditionalData> _data = new ConditionalWeakTable<Vehicle, VehicleAdditionalData>();
 
-        public static VehicleAdditionalData GetAdditionalData(this Vehicle _Vehicle)
+        public static VehicleAdditionalData GetAdditionalData(this Vehicle vehicle)
         {
-            return _data.GetOrCreateValue(_Vehicle);
+            return _data.GetOrCreateValue(vehicle);
         }
 
-        public static void AddData(this Vehicle _Vehicle, VehicleAdditionalData _value)
+        public static void AddData(this Vehicle vehicle, VehicleAdditionalData value)
         {
             try
             {
-                _data.Add(_Vehicle, _value);
+                _data.Add(vehicle, value);
             }
             catch (Exception)
             {
+            }
+        }
+    
+		public static void UpdateDriverState(this Vehicle vehicle)
+        {
+            VehicleAdditionalData _additionalData = vehicle.GetAdditionalData();
+
+            if (_additionalData.owner == null && vehicle.HasDriver())
+            {
+                _additionalData.owner = vehicle.Driver();
             }
         }
     }

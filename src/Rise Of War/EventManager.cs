@@ -13,6 +13,21 @@ namespace RiseOfWar.Events
         public static Action<OnPlayerDealtDamageEvent> onPlayerDealtDamage;
         public static Action<OnProjectileHitHitboxEvent> onProjectileHitHitbox;
         public static Action<OnCapturePointInteractionEvent> onCapturePointInteraction;
+        public static Action onGameLoaded; // TODO: Implement
+        public static Action<OnPlayerSpawnedEvent> onPlayerSpawned;
+    }
+
+    [Serializable]
+    public class OnPlayerSpawnedEvent
+    {
+        public Vector3 position { get; private set; }
+        public Vector3 rotation { get; private set; }
+
+        public OnPlayerSpawnedEvent(Vector3 position, Vector3 rotation)
+        {
+            this.position = position;
+            this.rotation = rotation;
+        }
     }
 
     [Serializable]

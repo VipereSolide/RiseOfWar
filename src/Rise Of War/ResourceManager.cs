@@ -1,10 +1,11 @@
-﻿using HarmonyLib;
-using UnityEngine;
-
-using System.IO;
-using System.Collections;
+﻿using System.Collections.Generic;
 using System.Xml.Serialization;
-using System.Collections.Generic;
+using System.Collections;
+using System.IO;
+using System;
+
+using UnityEngine;
+using HarmonyLib;
 
 namespace RiseOfWar
 {
@@ -37,6 +38,7 @@ namespace RiseOfWar
         public AudioClip captureJingleCapturePointNeutralized { get { return _captureJingleNeutralized; } }
         public Material[] projectileTracerMaterials { get; private set; }
 
+        public AssetBundle globalKillfeedAssetBundle { get; private set; }
         public AssetBundle loadingScreenAssetBundle { get; private set; }
         public AssetBundle killfeedAssetBundle { get; private set; }
         public AssetBundle playerUIAssetBundle { get; private set; }
@@ -44,19 +46,39 @@ namespace RiseOfWar
         public AssetBundle weaponEditorManagerAssetBundle { get; private set; }
         public Texture2D hitmarkerTexture { get; private set; }
         public GameObject weaponEditorManager { get; private set; }
+        public GameObject globalKillfeedPrefab { get; private set; }
+        public GameObject globalKillfeedItemPrefab { get; private set; }
 
         private void Awake()
         {
+            Plugin.Log("ResourceManager: Awaking resource manager...");
+
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            LoadProjectilePrefab();
-            LoadWeaponPatches();
-            GetHitmarkerTexture();
-            AcquireWeaponModifications();
             LoadCaptureJingleSounds();
+            LoadKillfeedAssetBundle();
+            LoadKillfeedAssetBundle();
+            LoadPlayerUIAssetBundle();
+            LoadProjectilePrefab();
+
+            GetHitmarkerTexture();
             GetWhistleSounds();
             GetHurtSounds();
+         
+            AcquireWeaponModifications();
+            LoadWeaponPatches();
+
+            Plugin.Log("ResourceManager: Resoure manager awaken.");
+        }
+
+        private void Start()
+        {
+            Plugin.Log("ResourceManager: Starting resource manager...");
+
+            StartCoroutine(RegisterAllWeaponProperties());
+
+            Plugin.Log("ResourceManager: Resource manager started.");
         }
 
         private void AcquireWeaponModifications()
@@ -238,19 +260,6 @@ namespace RiseOfWar
             {
                 Plugin.Log("ResourceManager: Successfully loaded hitmarker texture into memory.");
             }
-        }
-
-        private void Start()
-        {
-            StartCoroutine(RegisterAllWeaponProperties());
-            LoadAssetBundles();
-            Plugin.Log("ResourceManager: Successfully initialized Resource Manager.");
-        }
-
-        private void LoadAssetBundles()
-        {
-            Plugin.Log("ResourceManager: Loading asset bundles...");
-            LoadKillfeedAssetBundle();
         }
 
         private string[] RecursivelySearchForWeaponProperties(string _path)
@@ -499,28 +508,74 @@ namespace RiseOfWar
             _loadingScreen.SetActive(false);
         }
 
+        public void LoadCaptureJingleSounds()
+        {
+            Plugin.Log("ResourceManager: Loading capture jingles...");
+
+            _captureJingleGE = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_ge.wav");
+            _captureJingleUS = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_us.wav");
+            _captureJingleRU = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_ru.wav");
+            _captureJingleLost = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_point_lost.wav");
+            _captureJingleNeutralized = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_neutralized.wav");
+
+            transform.gameObject.AddComponent<MusicJingleManager>();
+            Plugin.Log("ResourceManager: Loaded capture jingles.");
+        }
+
         public void LoadLoadingScreenAssetBundle()
         {
             Plugin.Log("ResourceManager: Loading loading screen asset bundle...");
+            
             loadingScreenAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "loading_screen");
             _loadingScreen = Instantiate((GameObject)loadingScreenAssetBundle.LoadAsset("assets/loading mods menu/loading mods menu.prefab"), Instance.transform);
             _loadingScreen.transform.name = "Loading Screen";
             DisableLoadingScreen();
-            Plugin.Log("ResourceManager: Successfully loaded loading screen asset bundle!");
-        }
 
-        public void LoadPlayerUI()
+            Plugin.Log("ResourceManager: Loaded loading screen asset bundle.");
+        }
+        
+        public void LoadGlobalKillfeedAssetBundle()
         {
-            Plugin.Log("ResourceManager: Loading player asset bundle...");
-            playerUIAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "player_ui");
-            Plugin.Log("ResourceManager: Successfully loading player asset bundle!");
+            Plugin.Log("ResourceManager: Loading global killfeed asset bundle...");
+
+            globalKillfeedAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "global_killfeed");
+
+            if (globalKillfeedAssetBundle == null)
+            {
+                Plugin.LogError("ResourceManager: Could not load global killfeed asset bundle!");
+                return;
+            }
+
+            try
+            {
+                globalKillfeedItemPrefab = globalKillfeedAssetBundle.LoadAsset("assets/global killfeed/prefabs/global killfeed item.prefab") as GameObject;
+                globalKillfeedPrefab = globalKillfeedAssetBundle.LoadAsset("assets/global killfeed/prefabs/global killfeed.prefab") as GameObject;
+            }
+            catch (Exception _exception)
+            {
+                Plugin.LogError("ResourceManager: Could not load global killfeed asset bundle! " + _exception);
+                return;
+            }
+         
+            Plugin.Log("ResourceManager: Loaded global killfeed asset bundle.");
         }
 
         public void LoadKillfeedAssetBundle()
         {
             Plugin.Log("ResourceManager: Loading killfeed asset bundle...");
+            
             killfeedAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "killfeed_ui");
-            Plugin.Log("ResourceManager: Successfully loading killfeed asset bundle!");
+            
+            Plugin.Log("ResourceManager: Loaded killfeed asset bundle.");
+        }
+
+        public void LoadPlayerUIAssetBundle()
+        {
+            Plugin.Log("ResourceManager: Loading player asset bundle...");
+            
+            playerUIAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "player_ui");
+            
+            Plugin.Log("ResourceManager: Loaded player asset bundle.");
         }
 
         private IEnumerator RegisterAllWeaponProperties()
@@ -594,17 +649,6 @@ namespace RiseOfWar
 
             // Plugin.LogError($"ResourceManager: Could not find weapon properties for weapon \"{_weapon.name}\"!");
             return null;
-        }
-
-        public void LoadCaptureJingleSounds()
-        {
-            _captureJingleGE = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_ge.wav");
-            _captureJingleUS = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_us.wav");
-            _captureJingleRU = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_ru.wav");
-            _captureJingleLost = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_point_lost.wav");
-            _captureJingleNeutralized = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_neutralized.wav");
-
-            transform.gameObject.AddComponent<MusicJingleManager>();
         }
 
         private void GetWhistleSounds()

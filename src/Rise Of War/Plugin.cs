@@ -48,6 +48,7 @@ namespace RiseOfWar
             RegisterPatches();
 
             PlayerBadgesRegistry.InitPlayerBadges();
+            VehicleRegistry.Awake();
 
             GameObject _soundManager = new GameObject("Sound Manager");
             _soundManager.AddComponent<SoundManager>();
@@ -61,15 +62,30 @@ namespace RiseOfWar
 
         public static void Log(string _message, [CallerMemberName] string caller = null)
         {
-            _source.LogInfo(_message + $" ({caller})");
+            if (_message.Contains(":"))
+            {
+                _message = _message.Insert(_message.IndexOf(":"), $".{caller}");
+            }
+
+            _source.LogInfo(_message);
         }
         public static void LogWarning(string _message, [CallerMemberName] string caller = null)
         {
-            _source.LogWarning(_message + $" ({caller})");
+            if (_message.Contains(":"))
+            {
+                _message = _message.Insert(_message.IndexOf(":"), $".{caller}");
+            }
+
+            _source.LogWarning(_message);
         }
         public static void LogError(string _message, [CallerMemberName] string caller = null)
         {
-            _source.LogError(_message + $" ({caller})");
+            if (_message.Contains(":"))
+            {
+                _message = _message.Insert(_message.IndexOf(":"), $".{caller}");
+            }
+
+            _source.LogError(_message);
         }
 
         public static void EndLogGroup()
@@ -80,7 +96,7 @@ namespace RiseOfWar
         private void RegisterPatches()
         {
             var _instance = new Harmony("Rise Of War");
-            
+
             _instance.PatchAll(typeof(SeatPatcher));
             _instance.PatchAll(typeof(ActorPatcher));
             _instance.PatchAll(typeof(ActorPatcher));
