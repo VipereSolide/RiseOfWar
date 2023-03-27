@@ -68,12 +68,28 @@ namespace RiseOfWar
             text.color = _original;
         }
 
+        private bool IsInKillfeed(string text)
+        {
+            foreach(TMP_Text _text in _items)
+            {
+                if (_text.text == text)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public void AddItem(string itemName)
         {
+            if (IsInKillfeed(itemName))
+            {
+                return;
+            }
+
             TMP_Text _item = Instantiate(_itemPrefab, _itemContainer);
             _item.text = itemName;
-
-            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)_itemContainer.parent);
 
             _items.Add(_item);
             Invoke("AddKillfeedItemToDestroy", 5);
