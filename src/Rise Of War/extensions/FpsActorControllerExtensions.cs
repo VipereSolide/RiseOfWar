@@ -10,7 +10,7 @@ namespace RiseOfWar
     {
         public static void AddXP(this FpsActorController _instance, int xp)
         {
-            _instance.actor.GetAdditionalData().xp += xp;
+            _instance.actor.GetAdditionalData().score += xp;
         }
 
         public static FirstPersonController GetController(this FpsActorController _instance)

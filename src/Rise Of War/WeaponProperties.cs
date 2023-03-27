@@ -1,6 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System;
+
 using UnityEngine;
+using RiseOfWar;
 
 public class WeaponSettings
 {
@@ -41,7 +43,7 @@ public class WeaponSettings
                 _value = _value.Replace("{", "").Replace("}", "");
                 string[] _values = _value.Split(',');
 
-                return new DamagePoint(float.Parse(_values[0].Replace("distance:", "")), float.Parse(_values[1].Replace("damage:", "")));
+                return new DamagePoint(MathHelper.FloatHelper.Parse(_values[0].Replace("distance:", "")), MathHelper.FloatHelper.Parse(_values[1].Replace("damage:", "")));
             }
         }
 

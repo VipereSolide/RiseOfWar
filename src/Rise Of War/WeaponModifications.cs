@@ -67,7 +67,7 @@ namespace RiseOfWar
                 if (_m.HasParam(type))
                 {
                     Param _param = _m.FindParam(type);
-                    float _value = float.Parse(_param.text);
+                    float _value = MathHelper.FloatHelper.Parse(_param.text);
 
                     if (_param.operation == Param.OPERATION_ADD)
                     {

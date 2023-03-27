@@ -8,7 +8,7 @@ namespace RiseOfWar
     {
         public float lastTimeHit;
         public float lastTimeDead;
-        public int xp;
+        public int score;
 
         private List<RegisteredDamageSource> _registeredDamageSources = new List<RegisteredDamageSource>();
         public RegisteredDamageSource[] registeredDamagesSources

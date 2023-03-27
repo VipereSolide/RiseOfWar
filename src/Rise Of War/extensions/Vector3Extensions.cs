@@ -22,7 +22,7 @@ namespace RiseOfWar
         public static Vector3 Parse(string _value)
         {
             string[] _parts = _value.Split(',');
-            return new Vector3(float.Parse(_parts[0]), float.Parse(_parts[1]), float.Parse(_parts[2]));
+            return new Vector3(MathHelper.FloatHelper.Parse(_parts[0]), MathHelper.FloatHelper.Parse(_parts[1]), MathHelper.FloatHelper.Parse(_parts[2]));
         }
     }
 }

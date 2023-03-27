@@ -1,12 +1,19 @@
-﻿using HarmonyLib;
+﻿using UnityEngine;
+using HarmonyLib;
 
 namespace RiseOfWar
 {
     using Events;
-    using UnityEngine;
 
     public class ActorPatcher
     {
+        [HarmonyPatch(typeof(Actor), "Update")]
+        [HarmonyPostfix]
+        private static void Update(Actor __instance)
+        {
+            __instance.scoreboardEntry.flagCaptures = __instance.GetAdditionalData().score;
+        }
+
         [HarmonyPatch(typeof(Actor), "SpawnAt")]
         [HarmonyPostfix]
         static void SpawnAtPatch(Actor __instance)

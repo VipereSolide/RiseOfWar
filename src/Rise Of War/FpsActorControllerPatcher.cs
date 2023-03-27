@@ -234,7 +234,7 @@ namespace RiseOfWar
 
             StringBuilder _builder = new StringBuilder();
 
-            _builder.AppendLine("XP: " + controller.actor.GetAdditionalData().xp);
+            _builder.AppendLine("XP: " + controller.actor.GetAdditionalData().score);
 
             _builder.AppendLine();
 
