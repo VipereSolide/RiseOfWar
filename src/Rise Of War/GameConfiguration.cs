@@ -42,6 +42,8 @@ namespace RiseOfWar
 
         public static float globalKillfeedItemLifetime = 4;
 
+        public static bool isDebugModeEnabled = false;
+
         /* UI SETTINGS */
 
         public static Color32 playerUIAttachmentInactiveColor = new Color32(131, 130, 123, 255);

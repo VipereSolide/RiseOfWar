@@ -187,7 +187,6 @@ namespace RiseOfWar
         {
             DrawBasicInformation(__instance);
             DrawWeaponProperties(__instance);
-
         }
 
         private static void DrawWeaponProperties(FpsActorController controller)
