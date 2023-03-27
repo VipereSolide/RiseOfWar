@@ -100,7 +100,10 @@ namespace RiseOfWar
                                 RectTransform _instantiatedWeaponEntry = (RectTransform)GameObject.Instantiate(__instance.weaponEntryGroupPrefab).transform;
                                 _instantiatedWeaponEntry.SetParent(_weaponEntryContainer, false);
                                 _instantiatedWeaponEntry.anchoredPosition = new Vector2((_weaponEntryLine + 0.5f) * num2, -20f - _weaponEntryCount * 190f - _height);
-                                _instantiatedWeaponEntry.GetComponentInChildren<Text>().text = modInformation.title;
+
+                                Text _text = _instantiatedWeaponEntry.GetComponentInChildren<Text>();
+                                _text.text = modInformation.title;
+
                                 _height += 40f;
                             }
 
@@ -117,7 +120,17 @@ namespace RiseOfWar
                             if (_weaponEntry != null)
                             {
                                 _entryRectTransform.GetComponentInChildren<Image>().sprite = _weaponEntry.uiSprite;
-                                _entryRectTransform.GetComponentInChildren<Text>().text = WeaponRegistry.GetRealName(_weaponEntry);
+                                Text _text = _entryRectTransform.GetComponentInChildren<Text>();
+
+                                if (WeaponRegistry.IsCustomWeapon(_weaponEntry) == false)
+                                {
+                                    _text.color = Color.red;
+                                    _text.text = _weaponEntry.name;
+                                }
+                                else
+                                {
+                                    _text.text = WeaponRegistry.GetRealName(_weaponEntry);
+                                }
                             }
                             else
                             {
