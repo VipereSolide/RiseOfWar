@@ -40,6 +40,14 @@ namespace RiseOfWar
 		 *	Change Travel() to be public.
         */
 
+        private void OnGUI()
+        {
+            if (GameConfiguration.isDebugModeEnabled)
+            {
+                GUI.Label(new Rect(0, 0, 200, 50), "Debug mode");
+            }
+        }
+
         private void Awake()
         {
             _source = BepInEx.Logging.Logger.CreateLogSource(" Rise Of War");
