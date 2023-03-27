@@ -81,7 +81,7 @@ namespace RiseOfWar
 
         [HarmonyPatch(typeof(GameManager), "HandleArgument")]
         [HarmonyPrefix]
-        private static void HandleArgumentPatch(GameManager __instance, string argument, string parameter)
+        private static bool HandleArgumentPatch(GameManager __instance, string argument, string parameter)
         {
             string message = "GameManager: " + string.Format("Handling argument: {0} {1}", argument, parameter) + ".";
             ScriptConsole.instance.LogInfo(message);
@@ -92,7 +92,7 @@ namespace RiseOfWar
                 Debug.Log("GameManager: Using debug mode.");
 
                 GameConfiguration.isDebugModeEnabled = true;
-                return;
+                return false;
             }
 
             if (argument == "-generatenavcache")
@@ -103,7 +103,7 @@ namespace RiseOfWar
                 __instance.navCacheWritebackPath = parameter;
                 ModManager.instance.noContentMods = true;
 
-                return;
+                return false;
             }
 
             if (argument == "-custommap")
@@ -116,7 +116,7 @@ namespace RiseOfWar
                 __instance.CallPrivateMethod("SetupDefaultGameParameters");
 
                 GameManager.StartLevel(mapEntry, __instance.gameModeParameters);
-                return;
+                return false;
             }
 
             if (argument == "-editmap")
@@ -127,7 +127,7 @@ namespace RiseOfWar
                 __instance.CallPrivateMethod("SetupDefaultGameParameters");
 
                 GameManager.StartLevel(entry, __instance.gameModeParameters);
-                return;
+                return false;
             }
 
             if (argument == "-map")
@@ -135,32 +135,32 @@ namespace RiseOfWar
                 __instance.CallPrivateMethod("SetupDefaultGameParameters");
                 __instance.CallPrivateMethod("AutoStartMapWhenLoadingDone", new object[] { parameter });
 
-                return;
+                return false;
             }
 
             if (argument == "-debuggizmos")
             {
                 __instance.CallPrivateMethod("InitializeIngameDebugGizmos");
 
-                return;
+                return false;
             }
 
             if (argument == "-nocontentmods")
             {
                 ModManager.instance.noContentMods = true;
-                return;
+                return false;
             }
 
             if (argument == "-noworkshopmods")
             {
                 ModManager.instance.noWorkshopMods = true;
-                return;
+                return false;
             }
 
             if (argument == "-verbose")
             {
                 GameManager.verboseLogging = true;
-                return;
+                return false;
             }
 
             if (argument == "-testcontentmod")
@@ -189,7 +189,7 @@ namespace RiseOfWar
                 });
 
                 __instance.gameInfo.AdditiveLoadSingleMod(_modInfo);
-                return;
+                return false;
             }
             if (argument == "-benchmark")
             {
@@ -215,19 +215,19 @@ namespace RiseOfWar
                 __instance.benchmarkMutator.isEnabled = true;
                 ModManager.instance.builtInMutators.Add(__instance.benchmarkMutator);
 
-                return;
+                return false;
             }
 
             if (argument == "-testsessionid")
             {
                 RavenscriptManager.instance.OnStartTestSession(parameter);
-                return;
+                return false;
             }
 
             if (argument == "-testsession")
             {
                 RavenscriptManager.instance.OnStartTestSession(parameter);
-                return;
+                return false;
             }
 
             if (argument == "-modstagingpath")
@@ -237,7 +237,7 @@ namespace RiseOfWar
                 {
                     ModManager.ModStagingPath()
                 });
-                return;
+                return false;
             }
 
             if (!(argument == "-nointro"))
@@ -245,19 +245,22 @@ namespace RiseOfWar
                 if (argument == "-resetresolution")
                 {
                     Screen.SetResolution(1280, 720, false);
-                    return;
+                    return false;
                 }
 
                 if (argument == "-strictmodversion")
                 {
                     ModManager.instance.strictModVersionFilter = true;
-                    return;
+                    return false;
                 }
 
                 string _errorLog = "GameManager: " + string.Format("Unrecognized Argument {0}", argument) + ".";
                 ScriptConsole.instance.LogInfo(_errorLog);
                 Debug.LogWarning(_errorLog);
+                return false;
             }
+
+            return false;
         }
     }
 }
