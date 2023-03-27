@@ -40,13 +40,18 @@ namespace RiseOfWar
         /// </summary>
         public static int killfeedClearInterval = 2;
 
-
+        public static float globalKillfeedItemLifetime = 4;
 
         /* UI SETTINGS */
 
         public static Color32 playerUIAttachmentInactiveColor = new Color32(131, 130, 123, 255);
         public static Color32 playerUIAttachmentActiveColor = new Color32(255, 255, 255, 255);
         public static string playerUICurrentAmmoZeroColor = "83827b";
+
+        public static readonly string WHITE_COLOR = "C2BFB3";
+        public static readonly string GREEN_COLOR = "95BD63";
+        public static readonly string RED_COLOR = "832423";
+        public static readonly string BLUE_COLOR = "435462";
 
         /* MOVEMENT SETTINGS */
 

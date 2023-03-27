@@ -25,11 +25,6 @@ namespace RiseOfWar
             }
         }
 
-        public static readonly string WHITE_COLOR = "C2BFB3";
-        public static readonly string GREEN_COLOR = "95BD63";
-        public static readonly string RED_COLOR = "832423";
-        public static readonly string BLUE_COLOR = "435462";
-
         public static KillfeedManager Instance { get; set; }
 
         [SerializeField]
@@ -44,16 +39,16 @@ namespace RiseOfWar
         private List<KillfeedItem> _killfeedItems = new List<KillfeedItem>();
         public KillfeedItem[] killfeedItems { get { return _killfeedItems.ToArray(); } }
 
-        public static readonly string CAPTURED_POINT_MESSAGE = $"Captured <#{WHITE_COLOR}>67 XP</color>";
+        public static readonly string CAPTURED_POINT_MESSAGE = $"Captured <#{GameConfiguration.WHITE_COLOR}>67 XP</color>";
         public static readonly int CAPTURED_POINT_XP_AMOUNT = 67;
 
-        public static readonly string NEUTRALIZED_POINT_MESSAGE = $"Neutralized <#{WHITE_COLOR}>45 XP</color>";
+        public static readonly string NEUTRALIZED_POINT_MESSAGE = $"Neutralized <#{GameConfiguration.WHITE_COLOR}>45 XP</color>";
         public static readonly int NEUTRALIZED_POINT_XP_AMOUNT = 45;
 
-        public static readonly string RAID_POINT_MESSAGE = $"Raid <#{WHITE_COLOR}>40 XP</color>";
+        public static readonly string RAID_POINT_MESSAGE = $"Raid <#{GameConfiguration.WHITE_COLOR}>40 XP</color>";
         public static readonly int RAID_POINT_XP_AMOUNT = 40;
 
-        public static readonly string DEFEND_POINT_MESSAGE = $"Defend <#{WHITE_COLOR}>65 XP</color>";
+        public static readonly string DEFEND_POINT_MESSAGE = $"Defend <#{GameConfiguration.WHITE_COLOR}>65 XP</color>";
         public static readonly int DEFEND_POINT_XP_AMOUNT = 65;
 
         private List<Actor> _deadActors = new List<Actor>();
@@ -184,6 +179,7 @@ namespace RiseOfWar
             Actor _player = ActorManager.instance.player;
             Vector3 _playerPosition = _player.CenterPosition();
             Vector3 _victimPosition = _event.victim.CenterPosition();
+            bool _isHeadshot = _event.damage.point.y > 0.7f;
 
             if (_event.damage.sourceActor == _player)
             {
@@ -193,13 +189,16 @@ namespace RiseOfWar
 
                 if (_event.victim == _player)
                 {
-                    AddKillfeedItem($"Suicide <#{RED_COLOR}>-1 XP</color>", -1);
+                    AddKillfeedItem($"Suicide <#{GameConfiguration.RED_COLOR}>-1 XP</color>", -1);
+                    GlobalKillfeed.instance.AddSuicideItem(_event.victim);
                     return;
                 }
 
                 if (_event.victim.team == _player.team)
                 {
-                    AddKillfeedItem($"Team kill <#{RED_COLOR}>-10 XP</color>", -10);
+                    AddKillfeedItem($"Team kill <#{GameConfiguration.RED_COLOR}>-10 XP</color>", -10);
+
+                    GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _isHeadshot);
                     return;
                 }
 
@@ -226,7 +225,9 @@ namespace RiseOfWar
                 }
 
                 string _victimName = _event.victim.name;
-                AddKillfeedItem($"Killed <#{RED_COLOR}>{_victimName}</color> <#{WHITE_COLOR}>3 XP</color>", 3);
+                AddKillfeedItem($"Killed <#{GameConfiguration.RED_COLOR}>{_victimName}</color> <#{GameConfiguration.WHITE_COLOR}>3 XP</color>", 3);
+
+                GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _isHeadshot);
             }
         }
 
@@ -298,11 +299,11 @@ namespace RiseOfWar
 
                     if (_isDestroyed)
                     {
-                        AddKillfeedItem($"Destroyed <#{WHITE_COLOR}>{_destroyed}</color> <#{WHITE_COLOR}>1 XP</color>", 1);
+                        AddKillfeedItem($"Destroyed <#{GameConfiguration.WHITE_COLOR}>{_destroyed}</color> <#{GameConfiguration.WHITE_COLOR}>1 XP</color>", 1);
                     }
                     else
                     {
-                        AddKillfeedItem($"Penetrated <#{WHITE_COLOR}>Armor</color> <#{WHITE_COLOR}>1 XP</color>", 1);
+                        AddKillfeedItem($"Penetrated <#{GameConfiguration.WHITE_COLOR}>Armor</color> <#{GameConfiguration.WHITE_COLOR}>1 XP</color>", 1);
                     }
 
                     _shouldShowDamage[_i] = false;
@@ -322,7 +323,7 @@ namespace RiseOfWar
 
                 if (_isKillingVehicle)
                 {
-                    AddKillfeedItem($"Destroyed <#{WHITE_COLOR}>Vehicle</color> <#{WHITE_COLOR}>20 XP</color>", 20);
+                    AddKillfeedItem($"Destroyed <#{GameConfiguration.WHITE_COLOR}>Vehicle</color> <#{GameConfiguration.WHITE_COLOR}>20 XP</color>", 20);
                     _deadVehicles.Add(_vehicle);
 
                     return;
@@ -351,7 +352,7 @@ namespace RiseOfWar
             }
 
             string _victimName = _event.hit.actor.name;
-            AddKillfeedItem($"Wounded <#{WHITE_COLOR}>{_victimName}</color> <#{WHITE_COLOR}>2 XP</color>", 2);
+            AddKillfeedItem($"Wounded <#{GameConfiguration.WHITE_COLOR}>{_victimName}</color> <#{GameConfiguration.WHITE_COLOR}>2 XP</color>", 2);
             _woundedActors.Add(_event.hit.actor);
 
             if (_lastHitActors.ContainsKey(_event.hit.actor))

@@ -56,8 +56,8 @@ namespace RiseOfWar
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
+            LoadGlobalKillfeedAssetBundle();
             LoadCaptureJingleSounds();
-            LoadKillfeedAssetBundle();
             LoadKillfeedAssetBundle();
             LoadPlayerUIAssetBundle();
             LoadProjectilePrefab();
@@ -559,7 +559,7 @@ namespace RiseOfWar
          
             Plugin.Log("ResourceManager: Loaded global killfeed asset bundle.");
         }
-
+        
         public void LoadKillfeedAssetBundle()
         {
             Plugin.Log("ResourceManager: Loading killfeed asset bundle...");

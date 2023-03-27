@@ -1,6 +1,7 @@
-﻿using HarmonyLib;
+﻿using UnityEngine.UI;
 using UnityEngine;
-using UnityEngine.UI;
+using HarmonyLib;
+using TMPro;
 
 namespace RiseOfWar
 {
@@ -38,11 +39,12 @@ namespace RiseOfWar
             GameObject _playerUIPrefab = (GameObject)ResourceManager.Instance.playerUIAssetBundle.LoadAsset("assets/player ui/prefabs/player ui.prefab");
             GameObject _playerUI = GameObject.Instantiate(_playerUIPrefab);
             _playerUI.gameObject.AddComponent<PlayerUI>().Awake();
-            
+
             Plugin.Log("AwakePatch: Successfully loaded up player ui.");
 
             CreateHitmarker(__instance);
             CreateKillfeedUI();
+            CreateGlobalKillfeedUI();
 
             EventManager.onPlayerDealtDamage += OnPlayerDealtDamageListener;
             EventManager.onActorDie += OnActorDieListener;
@@ -129,7 +131,7 @@ namespace RiseOfWar
 
         static void CreateKillfeedUI()
         {
-            Plugin.Log("IngameUiPatcher: Loading killfeed ui...");
+            Plugin.Log("IngameUiPatcher: Loading killfeed UI...");
             GameObject _killfeedCanvasObject = (GameObject)ResourceManager.Instance.killfeedAssetBundle.LoadAsset("assets/killfeed/prefabs/killfeed.prefab");
 
             if (_killfeedCanvasObject == null)
@@ -143,7 +145,28 @@ namespace RiseOfWar
             GameObject _item = (GameObject)ResourceManager.Instance.killfeedAssetBundle.LoadAsset("assets/killfeed/prefabs/Item.prefab");
             _container.gameObject.AddComponent<KillfeedManager>().Setup(_container, _item);
 
-            Plugin.Log("IngameUiPatcher: Successfully loaded killfeed ui!");
+            Plugin.Log("IngameUiPatcher: Loaded killfeed ui.");
+        }
+
+        static void CreateGlobalKillfeedUI()
+        {
+            Plugin.Log("IngameUiPatcher: Loading global killfeed UI...");
+            ResourceManager _resourceManager = ResourceManager.Instance;
+            string _baseException = "InagmeUiPatcher: Oops, something went wrong! ";
+
+            if (_resourceManager.globalKillfeedItemPrefab == null || _resourceManager.globalKillfeedPrefab == null)
+            {
+                Plugin.LogError(_baseException + "It seems that the killfeed item prefab or the killfeed prefab could not be loaded by the ResourceManager!");
+                return;
+            }
+
+            GameObject _globalKillfeed = GameObject.Instantiate(_resourceManager.globalKillfeedPrefab);
+            _globalKillfeed.transform.name = "Global Killfeed";
+
+            GlobalKillfeed _globalKillfeedComponent = _globalKillfeed.AddComponent<GlobalKillfeed>();
+            _globalKillfeedComponent.Setup(_resourceManager.globalKillfeedItemPrefab.GetComponent<TMP_Text>());
+
+            Plugin.Log("IngameUiPatcher: Loaded global killfeed UI.");
         }
     }
 }
