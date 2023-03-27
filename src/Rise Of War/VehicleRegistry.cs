@@ -19,7 +19,6 @@ namespace RiseOfWar
 
         public static void Awake()
         {
-            EventManager.onPlayerSpawned += OnPlayerSpawned;
         }
 
         public static void OnPlayerSpawned(OnPlayerSpawnedEvent _event)
