@@ -8,6 +8,7 @@ using TMPro;
 namespace RiseOfWar
 {
     using Events;
+    using System.Collections;
     using System.Linq;
 
     public class KillfeedManager : MonoBehaviour
@@ -57,6 +58,7 @@ namespace RiseOfWar
         private Dictionary<Actor, float> _lastHitActors = new Dictionary<Actor, float>();
         private Dictionary<Vehicle, float> _lastHitVehicles = new Dictionary<Vehicle, float>();
         private float _lastPointCaptureInteraction = 0;
+        private float _itemCooldown = 0;
 
         public void AddKillfeedItem(string message, int score)
         {
@@ -103,6 +105,40 @@ namespace RiseOfWar
         private void Update()
         {
             HandleLivingKillfeedItems();
+
+            if (_toDestroy.Count == 0)
+            {
+                return;
+            }
+
+            StartCoroutine(FadeItem(_toDestroy[0], 1.5f, true));
+            _toDestroy.RemoveAt(0);
+        }
+
+        private IEnumerator FadeItem(CanvasGroup canvasGroup, float fadeTime, bool destroyOnEnd)
+        {
+            if (canvasGroup == null)
+            {
+                yield break;
+            }
+
+            float _cooldown = fadeTime;
+
+            while (_cooldown > 0)
+            {
+                _cooldown -= Time.deltaTime;
+                canvasGroup.alpha = _cooldown / fadeTime;
+
+                yield return new WaitForEndOfFrame();
+            }
+
+            if (destroyOnEnd)
+            {
+                Destroy(canvasGroup.gameObject);
+                yield break;
+            }
+
+            canvasGroup.gameObject.SetActive(false);
         }
 
         private void AddListeners()
@@ -179,7 +215,8 @@ namespace RiseOfWar
             Actor _player = ActorManager.instance.player;
             Vector3 _playerPosition = _player.CenterPosition();
             Vector3 _victimPosition = _event.victim.CenterPosition();
-            bool _isHeadshot = _event.damage.point.y > 0.7f;
+            bool _isHeadshot = _event.damage.point.y - _event.victim.Position().y > 1.37f;
+            Debug.Log($"Is Headshot = {_isHeadshot}; Hit point = {_event.damage.point.y}; Victim position = {_event.victim.Position().y}; Point total = {_event.damage.point.y - _event.victim.Position().y};");
 
             if (_event.damage.sourceActor == _player)
             {
@@ -366,7 +403,6 @@ namespace RiseOfWar
 
             return;
         }
-
 
         private void HandleLivingKillfeedItems()
         {

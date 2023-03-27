@@ -17,7 +17,7 @@ namespace RiseOfWar
         protected TMP_Text _itemPrefab;
 
         protected List<TMP_Text> _items = new List<TMP_Text>();
-        protected float _itemCooldown;
+        protected List<TMP_Text> _toDestroy = new List<TMP_Text>();
 
         private void Awake()
         {
@@ -26,7 +26,13 @@ namespace RiseOfWar
 
         private void Update()
         {
-            UpdateItemCooldown();
+            if (_toDestroy.Count == 0)
+            {
+                return;
+            }
+
+            StartCoroutine(FadeText(_toDestroy[0], 1.5f, true));
+            _toDestroy.RemoveAt(0);
         }
 
         public void Setup(TMP_Text itemPrefab)
@@ -35,24 +41,13 @@ namespace RiseOfWar
             this._itemPrefab = itemPrefab;
         }
 
-        private void UpdateItemCooldown()
-        {
-            _itemCooldown += Time.deltaTime;
-
-            if (_itemCooldown > GameConfiguration.globalKillfeedItemLifetime)
-            {
-                DestroyLatestKillfeedItem();
-                _itemCooldown = 0;
-            }
-        }
-
-        private void DestroyLatestKillfeedItem()
-        {
-            StartCoroutine(FadeText(_items[_items.Count - 1], 1.5f, true));
-        }
-
         private IEnumerator FadeText(TMP_Text text, float fadeTime, bool destroyOnEnd)
         {
+            if (text == null)
+            {
+                yield break;
+            }
+
             Color _original = text.color;
             Color _color = text.color;
             float _cooldown = fadeTime;
@@ -84,6 +79,13 @@ namespace RiseOfWar
             LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)_itemContainer.parent);
 
             _items.Add(_item);
+            Invoke("AddKillfeedItemToDestroy", 5);
+        }
+
+        private void AddKillfeedItemToDestroy()
+        {
+            _toDestroy.Add(_items[0]);
+            _items.RemoveAt(0);
         }
 
         public void AddSuicideItem(Actor player)
