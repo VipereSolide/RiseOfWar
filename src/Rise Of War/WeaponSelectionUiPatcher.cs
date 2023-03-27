@@ -10,8 +10,14 @@ namespace RiseOfWar
         private static bool ShouldBeRemoved(WeaponManager.WeaponEntry entry)
         {
             bool _doesPlayerHaveAllWeapons = (GameManager.PlayerTeam() != -1 && !GameManager.GameParameters().playerHasAllWeapons && !GameManager.instance.gameInfo.team[GameManager.PlayerTeam()].IsWeaponEntryAvailable(entry));
-            bool _isCustomWeapon = (GameManager.PlayerTeam() != -1 && WeaponRegistry.IsCustomWeapon(entry));
-            return _doesPlayerHaveAllWeapons /*|| !_isCustomWeapon*/;
+            bool _isCustomWeapon = GameManager.PlayerTeam() != -1 && WeaponRegistry.IsCustomWeapon(entry);
+
+            if (GameConfiguration.isDebugModeEnabled)
+            {
+                return false;
+            }
+
+            return _doesPlayerHaveAllWeapons || !_isCustomWeapon;
         }
 
         [HarmonyPatch(typeof(WeaponSelectionUi), "SetupTagGroups")]
