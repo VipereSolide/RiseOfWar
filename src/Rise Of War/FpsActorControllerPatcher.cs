@@ -185,6 +185,11 @@ namespace RiseOfWar
         [HarmonyPostfix]
         private static void OnGUIPatch(FpsActorController __instance)
         {
+            if (GameConfiguration.isDebugModeEnabled == false)
+            {
+                return;
+            }
+
             DrawBasicInformation(__instance);
             DrawWeaponProperties(__instance);
         }
