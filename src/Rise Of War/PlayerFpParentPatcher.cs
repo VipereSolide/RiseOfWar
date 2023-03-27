@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using UnityEngine;
-using System;
 using UnityStandardAssets.Characters.FirstPerson;
 
 namespace RiseOfWar

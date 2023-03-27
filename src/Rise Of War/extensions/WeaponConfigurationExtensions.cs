@@ -1,8 +1,4 @@
-﻿using System;
-using UnityEngine;
-using HarmonyLib;
-
-namespace RiseOfWar
+﻿namespace RiseOfWar
 {
     public static class WeaponConfigurationExtensions
     {

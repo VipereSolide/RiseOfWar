@@ -1,11 +1,10 @@
-﻿using System;
-
-using Random = UnityEngine.Random;
-using UnityEngine.Profiling;
-using UnityEngine;
-using HarmonyLib;
-using MapEditor;
+﻿using HarmonyLib;
 using Lua;
+using MapEditor;
+using System;
+using UnityEngine;
+using UnityEngine.Profiling;
+using Random = UnityEngine.Random;
 
 namespace RiseOfWar
 {

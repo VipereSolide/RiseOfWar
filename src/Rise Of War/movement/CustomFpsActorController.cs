@@ -1,7 +1,4 @@
-﻿using System;
-using UnityEngine;
-using HarmonyLib;
-using UnityStandardAssets.Characters.FirstPerson;
+﻿using UnityEngine;
 
 namespace RiseOfWar
 {
@@ -65,7 +62,7 @@ namespace RiseOfWar
         {
             _input = new Vector2(SteelInput.GetAxis(SteelInput.KeyBinds.Horizontal), SteelInput.GetAxis(SteelInput.KeyBinds.Vertical));
         }
-    
+
         private void GetPlayerFinalVelocity()
         {
             _velocity = _velocity * Time.deltaTime * _currentSpeed;

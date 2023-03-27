@@ -1,7 +1,5 @@
-﻿using System.Xml.Serialization;
-using System;
-
-using UnityEngine;
+﻿using System;
+using System.Xml.Serialization;
 
 namespace RiseOfWar
 {

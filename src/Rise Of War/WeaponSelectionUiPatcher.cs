@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System;
-
-using UnityEngine.UI;
+﻿using HarmonyLib;
+using System.Collections.Generic;
 using UnityEngine;
-using HarmonyLib;
+using UnityEngine.UI;
 
 namespace RiseOfWar
 {
@@ -25,11 +23,11 @@ namespace RiseOfWar
 
             __instance.SetProperty("selectionHighlighter", new Dictionary<int, RawImage>(_registeredWeapons.Count));
             __instance.SetProperty("tagText", new Dictionary<int, Text>(_registeredWeapons.Count));
-            __instance.GetProperty<RectTransform>("tagButtonPanel").SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 20f + 340f * (float)_registeredWeapons.Count);
+            __instance.GetProperty<RectTransform>("tagButtonPanel").SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 20f + 340f * _registeredWeapons.Count);
             __instance.SetProperty("tagGroupContainer", new List<GameObject>());
 
-            int num = Mathf.Max(1, Mathf.FloorToInt((float)Screen.width / 410f));
-            float num2 = (float)(Screen.width / num);
+            int num = Mathf.Max(1, Mathf.FloorToInt(Screen.width / 410f));
+            float num2 = Screen.width / num;
             __instance.SetProperty("tagIndexOfEntry", new Dictionary<WeaponManager.WeaponEntry, int>());
             bool flag = false;
 
@@ -56,7 +54,7 @@ namespace RiseOfWar
                 RectTransform _instantiatedWeaponRectTransform = (RectTransform)_instantiatedWeapon.transform;
                 _instantiatedWeaponRectTransform.SetParent(__instance.tagButtonPanel, false);
                 _instantiatedWeaponRectTransform.anchoredPosition = new Vector2(20f + 340f * i, 0f);
-                
+
                 int _index = i;
                 _instantiatedWeapon.onClick.AddListener(() => __instance.OpenTag(_index));
 
@@ -86,16 +84,16 @@ namespace RiseOfWar
                             if (_weaponEntry != null && _weaponEntry.sourceMod != modInformation)
                             {
                                 modInformation = _weaponEntry.sourceMod;
-                                
+
                                 if (_weaponEntryLine > 0)
                                 {
                                     _weaponEntryLine = 0;
                                     _weaponEntryCount++;
                                 }
-                                
+
                                 RectTransform _instantiatedWeaponEntry = (RectTransform)GameObject.Instantiate(__instance.weaponEntryGroupPrefab).transform;
                                 _instantiatedWeaponEntry.SetParent(_weaponEntryContainer, false);
-                                _instantiatedWeaponEntry.anchoredPosition = new Vector2(((float)_weaponEntryLine + 0.5f) * num2, -20f - (float)_weaponEntryCount * 190f - _height);
+                                _instantiatedWeaponEntry.anchoredPosition = new Vector2((_weaponEntryLine + 0.5f) * num2, -20f - _weaponEntryCount * 190f - _height);
                                 _instantiatedWeaponEntry.GetComponentInChildren<Text>().text = modInformation.title;
                                 _height += 40f;
                             }
@@ -121,7 +119,7 @@ namespace RiseOfWar
                                 _entryRectTransform.GetComponentInChildren<Text>().text = "";
                             }
 
-                            _entryRectTransform.anchoredPosition = new Vector2(((float)_weaponEntryLine + 0.5f) * num2, -20f - (float)_weaponEntryCount * 190f - _height);
+                            _entryRectTransform.anchoredPosition = new Vector2((_weaponEntryLine + 0.5f) * num2, -20f - _weaponEntryCount * 190f - _height);
                             if (_weaponEntry != null && !__instance.GetProperty<Dictionary<WeaponManager.WeaponEntry, int>>("tagIndexOfEntry").ContainsKey(_weaponEntry))
                             {
                                 __instance.GetProperty<Dictionary<WeaponManager.WeaponEntry, int>>("tagIndexOfEntry").Add(_weaponEntry, i);
@@ -141,7 +139,7 @@ namespace RiseOfWar
                         _weaponEntryCount++;
                     }
 
-                    _weaponEntryContainer.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 60f + (float)_weaponEntryCount * 190f + _height);
+                    _weaponEntryContainer.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 60f + _weaponEntryCount * 190f + _height);
                 }
 
                 _instantiatedTagGroupContainer.gameObject.SetActive(false);

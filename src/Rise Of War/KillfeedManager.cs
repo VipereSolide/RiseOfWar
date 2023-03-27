@@ -1,9 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
 using System.Collections.Generic;
-using System;
-
-using UnityEngine;
 using TMPro;
+using UnityEngine;
 
 namespace RiseOfWar
 {
@@ -58,7 +56,6 @@ namespace RiseOfWar
         private Dictionary<Actor, float> _lastHitActors = new Dictionary<Actor, float>();
         private Dictionary<Vehicle, float> _lastHitVehicles = new Dictionary<Vehicle, float>();
         private float _lastPointCaptureInteraction = 0;
-        private float _itemCooldown = 0;
 
         public void AddKillfeedItem(string message, int score)
         {
@@ -216,6 +213,7 @@ namespace RiseOfWar
             Vector3 _playerPosition = _player.CenterPosition();
             Vector3 _victimPosition = _event.victim.CenterPosition();
             bool _isHeadshot = _event.damage.point.y - _event.victim.Position().y > 1.37f;
+            _isHeadshot = _event.damage.isCriticalHit;
             Debug.Log($"Is Headshot = {_isHeadshot}; Hit point = {_event.damage.point.y}; Victim position = {_event.victim.Position().y}; Point total = {_event.damage.point.y - _event.victim.Position().y};");
 
             if (_event.damage.sourceActor == _player)

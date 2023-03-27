@@ -1,8 +1,7 @@
-﻿using System;
-
-using UnityEngine.UI;
-using UnityEngine;
+﻿
 using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace RiseOfWar
 {
@@ -45,7 +44,7 @@ namespace RiseOfWar
         {
             _playerUsernameText.text = _username;
         }
-        
+
         public void SetHealthAmount(float _amount)
         {
             int _count = Mathf.RoundToInt(_amount / 10 * 2);
@@ -55,7 +54,7 @@ namespace RiseOfWar
                 _healthImages[_i].color = (_i < _count) ? new Color32(255, 255, 255, 255) : GameConfiguration.playerUIAttachmentInactiveColor;
             }
         }
-        
+
         public void SetPlayerStaminaAmount(float _stamina)
         {
             _playerStaminaSlider.maxValue = GameConfiguration.playerMaxStamina;
@@ -68,7 +67,7 @@ namespace RiseOfWar
             _playerStaminaSliderCanvasGroup.alpha = _alpha;
             _playerStaminaIconImage.color = new Color(_playerStaminaIconImage.color.r, _playerStaminaIconImage.color.g, _playerStaminaIconImage.color.b, _alpha);
         }
-        
+
         public Image GetAttachmentImage(WeaponModificationType _weaponAttachment)
         {
             switch (_weaponAttachment)
@@ -81,7 +80,7 @@ namespace RiseOfWar
                 default: return _bulletAttachmentImage;
             }
         }
-        
+
         public void SetWeaponModificationActive(WeaponModificationType _weaponAttachment, bool _active)
         {
             Image _attachment = GetAttachmentImage(_weaponAttachment);
@@ -98,7 +97,7 @@ namespace RiseOfWar
             SetWeaponModificationActive(WeaponModificationType.Spring, active);
             SetWeaponModificationActive(WeaponModificationType.Barrel, active);
         }
-        
+
         private string FillNumberWithZero(string _base, int _zeroAmount)
         {
             string _text = _base.ToString();
@@ -119,32 +118,32 @@ namespace RiseOfWar
 
             return _text;
         }
-        
+
         public void SetCurrentBulletAmount(int _amount)
         {
             _currentAmmoText.text = FillNumberWithZero(_amount.ToString(), 3);
         }
-        
+
         public void SetCurrentAmmoInReserveAmount(int _amount)
         {
             _currentAmmoInReserveText.text = FillNumberWithZero(_amount.ToString(), 3);
         }
-        
+
         public void SetWeaponFireMode(WeaponFireMode _fireMode)
         {
             _currentFireModeText.text = _fireMode.ToString().ToUpper();
         }
-        
+
         public void SetWeaponFireRange(int _rangeInMeters)
         {
             _currentFireRangeText.text = _rangeInMeters.ToString() + "m";
         }
-        
+
         public void SetWeaponCustomDisplayName(string _customDisplayName)
         {
             _customDisplayNameText.text = $"\"{_customDisplayName}\"";
         }
-        
+
         public void HideCustomDisplayName()
         {
             _customDisplayNameText.text = "";
@@ -156,14 +155,14 @@ namespace RiseOfWar
         {
             GetSingleton();
         }
-        
+
         private void Start()
         {
             GetReferences();
 
             SetPlayerUsername(ActorManager.instance.player.name);
         }
-        
+
         private void Update()
         {
             if (_playerStaminaSlider.value <= 0)

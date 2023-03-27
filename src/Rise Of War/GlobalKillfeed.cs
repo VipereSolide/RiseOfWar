@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Collections;
-using System;
-
-using UnityEngine.UI;
-using UnityEngine;
-using HarmonyLib;
+﻿using System.Collections;
+using System.Collections.Generic;
 using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace RiseOfWar
 {
@@ -38,7 +35,7 @@ namespace RiseOfWar
         public void Setup(TMP_Text itemPrefab)
         {
             _itemContainer = transform.Find("Canvas/Killfeed");
-            this._itemPrefab = itemPrefab;
+            _itemPrefab = itemPrefab;
         }
 
         private IEnumerator FadeText(TMP_Text text, float fadeTime, bool destroyOnEnd)

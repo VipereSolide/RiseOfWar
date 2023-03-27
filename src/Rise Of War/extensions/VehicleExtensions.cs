@@ -1,8 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
 using System.Collections.Generic;
-using System;
-
-using UnityEngine;
+using System.Runtime.CompilerServices;
 
 namespace RiseOfWar
 {
@@ -47,8 +45,8 @@ namespace RiseOfWar
             {
             }
         }
-    
-		public static void UpdateDriverState(this Vehicle vehicle)
+
+        public static void UpdateDriverState(this Vehicle vehicle)
         {
             VehicleAdditionalData _additionalData = vehicle.GetAdditionalData();
 

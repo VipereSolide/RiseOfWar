@@ -1,6 +1,5 @@
-﻿using UnityEngine;
-using HarmonyLib;
-using System.Collections.Generic;
+﻿using HarmonyLib;
+using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
 namespace RiseOfWar
@@ -11,7 +10,7 @@ namespace RiseOfWar
         [HarmonyPrefix]
         static bool LookRotationPatch(MouseLook __instance, Transform character, Transform camera)
         {
-			return false;
-		}
+            return false;
+        }
     }
 }

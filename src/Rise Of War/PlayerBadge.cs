@@ -1,6 +1,5 @@
-﻿using System.IO;
-using System;
-
+﻿using System;
+using System.IO;
 using UnityEngine;
 
 namespace RiseOfWar
@@ -76,7 +75,7 @@ namespace RiseOfWar
 
         public virtual PlayerBadge SetLevel(int level)
         {
-            this._level = level;
+            _level = level;
             return this;
         }
 

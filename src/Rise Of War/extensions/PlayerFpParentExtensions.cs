@@ -1,6 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 using UnityEngine;
-using UnityStandardAssets.Characters.FirstPerson;
 
 namespace RiseOfWar
 {

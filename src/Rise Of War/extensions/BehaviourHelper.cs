@@ -1,8 +1,6 @@
-﻿using System.Reflection;
-using System;
-
+﻿using HarmonyLib;
+using System.Reflection;
 using UnityEngine;
-using HarmonyLib;
 
 namespace RiseOfWar
 {

@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Xml.Serialization;
-using System.Collections;
-using System.IO;
+﻿using HarmonyLib;
 using System;
-
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Xml.Serialization;
 using UnityEngine;
-using HarmonyLib;
 
 namespace RiseOfWar
 {
@@ -65,7 +64,7 @@ namespace RiseOfWar
             GetHitmarkerTexture();
             GetWhistleSounds();
             GetHurtSounds();
-         
+
             AcquireWeaponModifications();
             LoadWeaponPatches();
 
@@ -525,7 +524,7 @@ namespace RiseOfWar
         public void LoadLoadingScreenAssetBundle()
         {
             Plugin.Log("ResourceManager: Loading loading screen asset bundle...");
-            
+
             loadingScreenAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "loading_screen");
             _loadingScreen = Instantiate((GameObject)loadingScreenAssetBundle.LoadAsset("assets/loading mods menu/loading mods menu.prefab"), Instance.transform);
             _loadingScreen.transform.name = "Loading Screen";
@@ -533,7 +532,7 @@ namespace RiseOfWar
 
             Plugin.Log("ResourceManager: Loaded loading screen asset bundle.");
         }
-        
+
         public void LoadGlobalKillfeedAssetBundle()
         {
             Plugin.Log("ResourceManager: Loading global killfeed asset bundle...");
@@ -556,25 +555,25 @@ namespace RiseOfWar
                 Plugin.LogError("ResourceManager: Could not load global killfeed asset bundle! " + _exception);
                 return;
             }
-         
+
             Plugin.Log("ResourceManager: Loaded global killfeed asset bundle.");
         }
-        
+
         public void LoadKillfeedAssetBundle()
         {
             Plugin.Log("ResourceManager: Loading killfeed asset bundle...");
-            
+
             killfeedAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "killfeed_ui");
-            
+
             Plugin.Log("ResourceManager: Loaded killfeed asset bundle.");
         }
 
         public void LoadPlayerUIAssetBundle()
         {
             Plugin.Log("ResourceManager: Loading player asset bundle...");
-            
+
             playerUIAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "player_ui");
-            
+
             Plugin.Log("ResourceManager: Loaded player asset bundle.");
         }
 

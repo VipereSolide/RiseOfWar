@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System;
-
+﻿using HarmonyLib;
+using System.Collections.Generic;
 using UnityEngine;
-using HarmonyLib;
 
 namespace RiseOfWar
 {
@@ -15,10 +13,10 @@ namespace RiseOfWar
             List<Actor> _actors = ActorManager.AliveActors();
             List<Actor> _output = new List<Actor>();
 
-            foreach(Actor _actor in _actors)
+            foreach (Actor _actor in _actors)
             {
                 if (point.owner == _actor.team)
-                { 
+                {
                     if (point.IsInsideProtectRange(_actor.CenterPosition()))
                     {
                         _output.Add(_actor);
@@ -50,7 +48,7 @@ namespace RiseOfWar
             OnCapturePointInteractionEvent _interaction = new OnCapturePointInteractionEvent(OnCapturePointInteractionEvent.InteractionType.Lost, ActorManager.AliveActorsInRange(__instance.transform.position, __instance.captureRange), __instance.owner, team, __instance);
             Actor[] _actorsInRange = ActorsInCapturePointRange(__instance);
 
-            foreach(Actor _actor in _actorsInRange)
+            foreach (Actor _actor in _actorsInRange)
             {
                 Debug.Log("Actors in range: " + _actor.name);
             }

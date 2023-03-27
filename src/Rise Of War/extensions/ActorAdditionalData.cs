@@ -1,6 +1,6 @@
-﻿using UnityEngine;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace RiseOfWar
 {
@@ -10,7 +10,7 @@ namespace RiseOfWar
         public float lastTimeDead;
         public int xp;
 
-        private List<RegisteredDamageSource> _registeredDamageSources = new List<RegisteredDamageSource>();  
+        private List<RegisteredDamageSource> _registeredDamageSources = new List<RegisteredDamageSource>();
         public RegisteredDamageSource[] registeredDamagesSources
         {
             get { return _registeredDamageSources.ToArray(); }
@@ -26,12 +26,12 @@ namespace RiseOfWar
         {
             _registeredDamageSources.Add(_source);
         }
-        
+
         public void RemoveDamageSource(RegisteredDamageSource _source)
         {
             _registeredDamageSources.Remove(_source);
         }
-        
+
         public void RemoveOldestDamageSource()
         {
             _registeredDamageSources.RemoveAt(_registeredDamageSources.Count - 1);

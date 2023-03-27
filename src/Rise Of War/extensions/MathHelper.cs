@@ -1,8 +1,4 @@
-﻿using System;
-
-using UnityEngine;
-
-namespace RiseOfWar
+﻿namespace RiseOfWar
 {
     public static class MathHelper
     {

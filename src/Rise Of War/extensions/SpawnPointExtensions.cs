@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 
-using UnityEngine;
-
 namespace RiseOfWar
 {
     public static class SpawnPointExtensions

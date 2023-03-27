@@ -1,7 +1,6 @@
-﻿using UnityEngine;
+﻿using HarmonyLib;
 using System;
-
-using HarmonyLib;
+using UnityEngine;
 
 namespace RiseOfWar
 {

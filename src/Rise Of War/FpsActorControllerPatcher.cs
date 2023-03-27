@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using HarmonyLib;
+using System.Collections.Generic;
 using System.Text;
-
-using UnityStandardAssets.Characters.FirstPerson;
-
 using UnityEngine;
-using HarmonyLib;
-using BepInEx;
+using UnityStandardAssets.Characters.FirstPerson;
 
 namespace RiseOfWar
 {

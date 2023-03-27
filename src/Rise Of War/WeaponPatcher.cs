@@ -1,5 +1,5 @@
-﻿using System;
-using HarmonyLib;
+﻿using HarmonyLib;
+using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -424,7 +424,7 @@ namespace RiseOfWar
             float _upwardRecoil = _weaponProperties.cameraRecoil.GetFloat(WeaponXMLProperties.CameraRecoil.UPWARD);
             float _rightwardRecoil = _weaponProperties.cameraRecoil.GetFloat(WeaponXMLProperties.CameraRecoil.RIGHTWARD);
             float _recoilVariance = _weaponProperties.cameraRecoil.GetFloat(WeaponXMLProperties.CameraRecoil.VARIANCE);
-            
+
             if (__instance.user.controller.Prone())
             {
                 _upwardRecoil /= 2;
@@ -437,7 +437,7 @@ namespace RiseOfWar
                 _recoilVariance /= 2;
                 _rightwardRecoil /= 2;
             }
-            
+
             PlayerFpParent.instance.AddCameraRecoil(_upwardRecoil, _rightwardRecoil, _recoilVariance);
 
             if (__instance.aiming)

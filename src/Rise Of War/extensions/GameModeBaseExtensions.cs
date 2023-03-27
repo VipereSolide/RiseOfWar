@@ -1,9 +1,4 @@
-﻿using System;
-using System.Reflection;
-using HarmonyLib;
-using UnityEngine;
-
-namespace RiseOfWar
+﻿namespace RiseOfWar
 {
     public static class GameModeBaseExtensions
     {

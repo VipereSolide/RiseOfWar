@@ -1,10 +1,5 @@
-﻿using System.Collections;
-using System;
-
-using UnityEngine.UI;
+﻿using HarmonyLib;
 using UnityEngine;
-using HarmonyLib;
-using TMPro;
 
 namespace RiseOfWar
 {

@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System;
-
-using UnityEngine.UI;
+﻿using HarmonyLib;
+using System.Collections.Generic;
 using UnityEngine;
-using HarmonyLib;
+using UnityEngine.UI;
 
 namespace RiseOfWar
 {
@@ -13,7 +11,7 @@ namespace RiseOfWar
         [HarmonyPrefix]
         static bool SetEntriesPatch(WeaponSwitchGroup __instance, ref Dictionary<WeaponManager.WeaponEntry, Toggle> __result, List<WeaponManager.WeaponEntry> entries)
         {
-            float _screenBasePadding = Mathf.FloorToInt((float)Screen.width / 250f);
+            float _screenBasePadding = Mathf.FloorToInt(Screen.width / 250f);
             float _screenWidth = 1f / _screenBasePadding;
             int _entryHeight = 0;
 
@@ -30,14 +28,14 @@ namespace RiseOfWar
                 RectTransform _instantiatedEntry = GameObject.Instantiate(__instance.entryPrefab).GetComponent<RectTransform>();
                 _instantiatedEntry.name = WeaponRegistry.GetRealName(_weaponEntry);
                 _instantiatedEntry.SetParent(__instance.container, false);
-                _instantiatedEntry.anchorMin = new Vector2((float)_entryHeight * _screenWidth, 1f);
-                _instantiatedEntry.anchorMax = new Vector2((float)(_entryHeight + 1) * _screenWidth, 1f);
+                _instantiatedEntry.anchorMin = new Vector2(_entryHeight * _screenWidth, 1f);
+                _instantiatedEntry.anchorMax = new Vector2((_entryHeight + 1) * _screenWidth, 1f);
                 _instantiatedEntry.anchoredPosition = new Vector2(5f, -__instance.height - 5f);
                 _instantiatedEntry.GetComponentInChildren<Text>().text = WeaponRegistry.GetRealName(_weaponEntry);
 
                 Toggle _entryToggle = _instantiatedEntry.GetComponentInChildren<Toggle>();
                 _entryToggle.GetComponentInChildren<Text>().color = (_weaponEntry.usableByAi ? Color.white : Color.gray);
-                
+
                 _entryToggle.onValueChanged.AddListener((bool _isToggled) =>
                 {
                     WeaponSwitch.instance.OnEntryToggled(_weaponEntry, _isToggled);

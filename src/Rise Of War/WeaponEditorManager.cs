@@ -1,10 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Collections;
-
-using UnityStandardAssets.Characters.FirstPerson;
-using UnityEngine.UI;
+﻿using TMPro;
 using UnityEngine;
-using TMPro;
+using UnityEngine.UI;
 
 namespace RiseOfWar
 {

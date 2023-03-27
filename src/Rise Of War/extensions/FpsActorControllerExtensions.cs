@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using System;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
@@ -36,7 +35,7 @@ namespace RiseOfWar
 
         public static bool reloading(this FpsActorController _instance)
         {
-            return _instance.actor.HasUnholsteredWeapon() && _instance.actor.activeWeapon.reloading; 
+            return _instance.actor.HasUnholsteredWeapon() && _instance.actor.activeWeapon.reloading;
         }
 
         public static void SetSeatCamera(this FpsActorController _fpsActorController, Camera _camera)

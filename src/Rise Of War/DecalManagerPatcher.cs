@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using HarmonyLib;
+﻿using HarmonyLib;
+using UnityEngine;
 
 namespace RiseOfWar
 {
@@ -36,7 +36,7 @@ namespace RiseOfWar
             }
 
             _bloodParticle.team = team;
-            
+
             Renderer _particleRenderer = _bloodParticle.GetComponent<Renderer>();
             if (BloodParticle.BLOOD_PARTICLE_SETTING == BloodParticle.BloodParticleType.DecalOnly)
             {
