@@ -12,6 +12,7 @@ namespace RiseOfWar
         private static void Update(Actor __instance)
         {
             __instance.scoreboardEntry.flagCaptures = __instance.GetAdditionalData().score;
+            __instance.scoreboardEntry.fText.text = __instance.scoreboardEntry.flagCaptures.ToString();
         }
 
         [HarmonyPatch(typeof(Actor), "SpawnAt")]
