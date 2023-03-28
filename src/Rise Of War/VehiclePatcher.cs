@@ -96,25 +96,28 @@ namespace RiseOfWar
         {
             VehicleAdditionalData _additionalData = __instance.GetAdditionalData();
 
-            if (_additionalData.owner == null && __instance.HasDriver() && !__instance.Driver().aiControlled)
+            if (__instance.HasDriver())
             {
-                _additionalData.owner = __instance.Driver();
-            }
-            else
-            {
-                int _seatIndex = 0;
-
-                while (__instance.seats[0].occupant != _additionalData.owner)
+                if (_additionalData.owner == null)
                 {
-                    if (_seatIndex >= __instance.seats.Count)
-                    {
-                        __instance.seats[0].occupant.LeaveSeat(false);
-                        break;
-                    }
-
-                    __instance.seats[0].occupant.EnterSeat(__instance.seats[_seatIndex], false);
-                    _seatIndex++;
+                    _additionalData.owner = __instance.Driver();
                 }
+
+                return;
+            }
+
+            int _seatIndex = 0;
+
+            while (__instance.seats[0].occupant != _additionalData.owner)
+            {
+                if (_seatIndex >= __instance.seats.Count)
+                {
+                    __instance.seats[0].occupant.LeaveSeat(false);
+                    break;
+                }
+
+                __instance.seats[0].occupant.EnterSeat(__instance.seats[_seatIndex], false);
+                _seatIndex++;
             }
         }
 
