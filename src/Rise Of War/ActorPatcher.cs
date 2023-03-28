@@ -219,5 +219,46 @@ namespace RiseOfWar
             Plugin.EndLogGroup();
             return false;
         }
+
+        [HarmonyPatch(typeof(Actor), "EnterSeat")]
+        [HarmonyPrefix]
+        private static void EnterSeatPatch(Actor __instance, ref Seat seat)
+        {
+            if (seat == null)
+            {
+                return;
+            }
+
+            Vehicle _vehicle = seat.vehicle;
+
+            if (_vehicle == null)
+            {
+                Plugin.LogError("ActorPatcher: Cannot calculate enter seat actions if the seat's vehicle is null!");
+                return;
+            }
+
+            if (seat == _vehicle.seats[0])
+            {
+                if (_vehicle.GetAdditionalData().owner == null)
+                {
+                    return;
+                }
+
+                if (_vehicle.GetAdditionalData().owner != __instance)
+                {
+                    Seat _leftOverSeat = _vehicle.GetEmptySeat(false);
+
+                    if (_leftOverSeat == null)
+                    {
+                        seat = null;
+                        return;
+                    }
+
+                    seat = _leftOverSeat;
+                }
+            }
+
+            return;
+        }
     }
 }

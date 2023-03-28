@@ -1,6 +1,7 @@
-﻿
-using HarmonyLib;
+﻿using System.Collections.Generic;
+
 using UnityEngine;
+using HarmonyLib;
 
 namespace RiseOfWar
 {
@@ -91,34 +92,28 @@ namespace RiseOfWar
         }
 
         [HarmonyPatch(typeof(Vehicle), "OnDriverEntered")]
-        [HarmonyPostfix]
-        private static void OnDriverEnteredPatch(Vehicle __instance)
+        [HarmonyPrefix]
+        private static bool OnDriverEnteredPatch(Vehicle __instance)
         {
             VehicleAdditionalData _additionalData = __instance.GetAdditionalData();
 
-            if (__instance.HasDriver())
+            if (_additionalData.owner == null)
             {
-                if (_additionalData.owner == null)
-                {
-                    _additionalData.owner = __instance.Driver();
-                }
-
-                return;
+                _additionalData.owner = __instance.Driver();
+                return true;
             }
 
-            int _seatIndex = 0;
+            Seat _empty = __instance.GetEmptySeat(false);
 
-            while (__instance.seats[0].occupant != _additionalData.owner)
+            if (_empty == null)
             {
-                if (_seatIndex >= __instance.seats.Count)
-                {
-                    __instance.seats[0].occupant.LeaveSeat(false);
-                    break;
-                }
-
-                __instance.seats[0].occupant.EnterSeat(__instance.seats[_seatIndex], false);
-                _seatIndex++;
+                __instance.Driver().LeaveSeat(false);
+                return false;
             }
+
+            __instance.Driver().EnterSeat(_empty, false);
+
+            return false;
         }
 
         [HarmonyPatch(typeof(Vehicle), "StartBurning")]
