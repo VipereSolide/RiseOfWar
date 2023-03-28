@@ -40,7 +40,7 @@ namespace RiseOfWar
         /// </summary>
         public static int killfeedClearInterval = 2;
 
-        public static float globalKillfeedItemLifetime = 4;
+        public static float globalKillfeedItemLifetime = 6;
 
         public static bool isDebugModeEnabled = false;
 

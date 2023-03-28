@@ -119,11 +119,30 @@ namespace RiseOfWar
             AddItem($"<#{_playerColor}>{player.name}</color> <#{GameConfiguration.WHITE_COLOR}>[Suicide]</color> <#{_playerColor}>{player.name}</color>");
         }
 
+        public void AddKillItem(Actor killed, Actor killer, Weapon source, bool isHeadshot, bool isVictimInSquad = false, bool isKillerInSquad = false)
+        {
+            string _killedTeam = (killed.team == 0) ? GameConfiguration.BLUE_COLOR : GameConfiguration.RED_COLOR;
+            string _killerTeam = (killer.team == 0) ? GameConfiguration.BLUE_COLOR : GameConfiguration.RED_COLOR;
+            string _weapon = (isHeadshot) ? "Headshot" : WeaponRegistry.GetRealName(source.name);
+
+            if (isVictimInSquad) _killedTeam = GameConfiguration.GREEN_COLOR;
+            if (isKillerInSquad) _killerTeam = GameConfiguration.GREEN_COLOR;
+
+            AddItem($"<#{_killerTeam}>{killer.name}</color> <#{GameConfiguration.WHITE_COLOR}>[{_weapon}]</color> <#{_killedTeam}>{killed.name}</color>");
+        }
+
         public void AddKillItem(Actor killed, Actor killer, Weapon source, bool isHeadshot)
         {
             string _killedTeam = (killed.team == 0) ? GameConfiguration.BLUE_COLOR : GameConfiguration.RED_COLOR;
             string _killerTeam = (killer.team == 0) ? GameConfiguration.BLUE_COLOR : GameConfiguration.RED_COLOR;
             string _weapon = (isHeadshot) ? "Headshot" : WeaponRegistry.GetRealName(source.name);
+
+            Actor _player = FpsActorController.instance.actor;
+            bool _isVictimInSquad = killed == _player || _player.controller.GetSquad().members.Contains(killed.controller);
+            bool _isKillerInSquad = killer == _player || _player.controller.GetSquad().members.Contains(killer.controller);
+
+            if (_isVictimInSquad) _killedTeam = GameConfiguration.GREEN_COLOR;
+            if (_isKillerInSquad) _killerTeam = GameConfiguration.GREEN_COLOR;
 
             AddItem($"<#{_killerTeam}>{killer.name}</color> <#{GameConfiguration.WHITE_COLOR}>[{_weapon}]</color> <#{_killedTeam}>{killed.name}</color>");
         }

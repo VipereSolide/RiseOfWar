@@ -261,7 +261,10 @@ namespace RiseOfWar
                 AddKillfeedItem($"Killed <#{GameConfiguration.RED_COLOR}>{_victimName}</color> <#{GameConfiguration.WHITE_COLOR}>3 XP</color>", 3);
 
                 GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _isHeadshot);
+                return;
             }
+
+            GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _isHeadshot, false, _event.victim == _player);
         }
 
         private void OnPlayerDealtDamage(OnPlayerDealtDamageEvent _event)
