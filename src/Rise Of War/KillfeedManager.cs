@@ -264,7 +264,7 @@ namespace RiseOfWar
                 return;
             }
 
-            GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _isHeadshot, false, _event.victim == _player);
+            GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _isHeadshot);
         }
 
         private void OnPlayerDealtDamage(OnPlayerDealtDamageEvent _event)

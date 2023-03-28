@@ -70,7 +70,7 @@ namespace RiseOfWar
 
         private bool IsInKillfeed(string text)
         {
-            foreach(TMP_Text _text in _items)
+            foreach (TMP_Text _text in _items)
             {
                 if (_text.text == text)
                 {
@@ -138,11 +138,16 @@ namespace RiseOfWar
             string _weapon = (isHeadshot) ? "Headshot" : WeaponRegistry.GetRealName(source.name);
 
             Actor _player = FpsActorController.instance.actor;
-            bool _isVictimInSquad = killed == _player || _player.controller.GetSquad().members.Contains(killed.controller);
-            bool _isKillerInSquad = killer == _player || _player.controller.GetSquad().members.Contains(killer.controller);
 
-            if (_isVictimInSquad) _killedTeam = GameConfiguration.GREEN_COLOR;
-            if (_isKillerInSquad) _killerTeam = GameConfiguration.GREEN_COLOR;
+            if (killed == _player || _player.controller.GetSquad().members.Contains(killed.controller))
+            {
+                _killedTeam = GameConfiguration.GREEN_COLOR;
+            }
+
+            if (killer == _player || _player.controller.GetSquad().members.Contains(killer.controller))
+            {
+                _killerTeam = GameConfiguration.GREEN_COLOR;
+            }
 
             AddItem($"<#{_killerTeam}>{killer.name}</color> <#{GameConfiguration.WHITE_COLOR}>[{_weapon}]</color> <#{_killedTeam}>{killed.name}</color>");
         }
