@@ -106,6 +106,7 @@ namespace RiseOfWar
             var _instance = new Harmony("Rise Of War");
 
             _instance.PatchAll(typeof(SeatPatcher));
+            _instance.PatchAll(typeof(SquadPatcher));
             _instance.PatchAll(typeof(ActorPatcher));
             _instance.PatchAll(typeof(ActorPatcher));
             _instance.PatchAll(typeof(HitboxPatcher));
@@ -123,6 +124,7 @@ namespace RiseOfWar
             _instance.PatchAll(typeof(DecalManagerPatcher));
             _instance.PatchAll(typeof(WeaponManagerPatcher));
             _instance.PatchAll(typeof(PlayerFpParentPatcher));
+            _instance.PatchAll(typeof(AiActorControllerPatcher));
             _instance.PatchAll(typeof(WeaponSelectionUiPatcher));
             _instance.PatchAll(typeof(WeaponSwitchGroupPatcher));
             _instance.PatchAll(typeof(FpsActorControllerPatcher));
