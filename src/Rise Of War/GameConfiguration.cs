@@ -14,6 +14,7 @@ namespace RiseOfWar
         public static string defaultBadgesPath = "/Resources/Images/Badges/";
         public static string defaultWhistlePath = "/Resources/Sounds/Whistling/";
         public static string defaultHurtPath = "/Resources/Sounds/Damage/Pain/";
+        public static string defaultMeshModificationsPath = "/Resources/Data/Mesh Modifications/";
 
         /// <summary>
         /// Represents the field of view of the camera when any unscoped weapon is aiming.

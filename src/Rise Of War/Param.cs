@@ -7,6 +7,16 @@ namespace RiseOfWar
     [Serializable]
     public class Param
     {
+        public enum Type
+        {
+            Bool,
+            String,
+            Int,
+            Float,
+            Vector3,
+            Vector2,
+        }
+
         public static readonly string OPERATION_ADD = "addition";
         public static readonly string OPERATION_SUBSTRACTION = "substraction";
         public static readonly string OPERATION_DIVISION = "division";
@@ -35,5 +45,37 @@ namespace RiseOfWar
 
         [XmlAttribute(AttributeName = "operation")]
         public string operation;
+
+        public bool GetBool()
+        {
+            return bool.Parse(text);
+        }
+
+        public float GetFloat()
+        {
+            return MathHelper.FloatHelper.Parse(text);
+        }
+
+        public int GetInt()
+        {
+            return UnityEngine.Mathf.RoundToInt(MathHelper.FloatHelper.Parse(text));
+        }
+
+        public UnityEngine.Vector3 GetVector3()
+        {
+            float _x = MathHelper.FloatHelper.Parse(vx);
+            float _y = MathHelper.FloatHelper.Parse(vy);
+            float _z = MathHelper.FloatHelper.Parse(vz);
+            
+            return new UnityEngine.Vector3(_x, _y, _z);
+        }
+
+        public UnityEngine.Vector2 GetVector2()
+        {
+            float _x = MathHelper.FloatHelper.Parse(vx);
+            float _y = MathHelper.FloatHelper.Parse(vy);
+            
+            return new UnityEngine.Vector2(_x, _y);
+        }
     }
 }

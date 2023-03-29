@@ -5,6 +5,8 @@ using Random = UnityEngine.Random;
 
 namespace RiseOfWar
 {
+    using WeaponMeshModificator;
+
     public class WeaponPatcher
     {
         public static int lastPlayedFireAudioClipIndex = 0;
@@ -99,6 +101,23 @@ namespace RiseOfWar
             }
         }
 
+        [HarmonyPatch(typeof(Weapon), "LateUpdate")]
+        [HarmonyPrefix]
+        private static bool LateUpdatePatch(Weapon __instance)
+        {
+            if (__instance != FpsActorController.instance.actor.activeWeapon)
+            {
+                return false;
+            }
+
+            foreach (WeaponMeshModification _modification in WeaponMeshModificationRegistry.GetWeaponMeshModifications(__instance))
+            {
+                WeaponMeshModificationReader.ApplyWeaponMeshModification(__instance, _modification);
+            }
+
+            return false;
+        }
+
         private static void CreateAudioSource(Weapon __instance)
         {
             GameObject _audioSource = new GameObject("Audio Source");
@@ -157,6 +176,13 @@ namespace RiseOfWar
                 return;
             }
 
+            Actor _player = ActorManager.instance.player;
+
+            if (_player == null || _player.activeWeapon != __instance)
+            {
+                return;
+            }
+
             foreach (Lua.ScriptedBehaviour _scriptedBehaviour in __instance.GetComponents<Lua.ScriptedBehaviour>())
             {
                 if (_scriptedBehaviour.enabled == false)
@@ -171,13 +197,6 @@ namespace RiseOfWar
             __instance.HandleCurrentConefire();
             __instance.HandleAimingAnchor();
             __instance.HandleRecoil();
-
-            Actor _player = ActorManager.instance.player;
-
-            if (__instance == null || _player == null || _player.activeWeapon != __instance)
-            {
-                return;
-            }
 
             __instance.HandlePlayerUI();
         }

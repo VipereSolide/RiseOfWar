@@ -146,6 +146,7 @@ namespace RiseOfWar
             __instance.controller.ReceivedDamage(false, info.healthDamage, info.balanceDamage, info.point, info.direction, info.impactForce);
             float _healthBeforeDamage = __instance.health;
             __instance.health -= info.healthDamage;
+
             Plugin.Log($"ActorPatcher: Actor's health before damage = {_healthBeforeDamage}; Actor's current health = {__instance.health}");
 
             if (__instance.health <= 0f)

@@ -31,6 +31,9 @@ namespace RiseOfWar
 		 *	    this.animator.SetBool(Weapon.TUCK_PARAMETER_HASH, this.user.controller.IsSprinting() && !this.reloading);
 		 *	}
 		 *	
+		 * Line 0: Add:
+		 *  private void LateUpdate(){}
+		 *	
 		 *	PlayerFpParent.cs:
 		 *	Line 0: Add:
 		 *	private void Update(){}

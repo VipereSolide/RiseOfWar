@@ -8,6 +8,8 @@ using UnityEngine;
 
 namespace RiseOfWar
 {
+    using WeaponMeshModificator;
+
     public partial class ResourceManager : MonoBehaviour
     {
         public static ResourceManager Instance { get; private set; }
@@ -65,6 +67,7 @@ namespace RiseOfWar
             GetWhistleSounds();
             GetHurtSounds();
 
+            GetWeaponMeshModifications();
             AcquireWeaponModifications();
             LoadWeaponPatches();
 
@@ -78,6 +81,23 @@ namespace RiseOfWar
             StartCoroutine(RegisterAllWeaponProperties());
 
             Plugin.Log("ResourceManager: Resource manager started.");
+        }
+
+        private void GetWeaponMeshModifications()
+        {
+            string _path = Application.dataPath + GameConfiguration.defaultMeshModificationsPath;
+            string[] _files = Directory.GetFiles(_path);
+
+            foreach(string _file in _files)
+            {
+                string _content = File.ReadAllText(_file);
+
+                XmlSerializer _serializer = new XmlSerializer(typeof(WeaponMeshModification));
+                StringReader _reader = new StringReader(_content);
+                WeaponMeshModification _meshModification = (WeaponMeshModification)_serializer.Deserialize(_reader);
+
+                WeaponMeshModificationRegistry.weaponMeshModifications.Add(_meshModification);
+            }
         }
 
         private void AcquireWeaponModifications()

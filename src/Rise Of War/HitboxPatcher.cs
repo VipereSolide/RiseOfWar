@@ -12,7 +12,7 @@ namespace RiseOfWar
         [HarmonyPrefix]
         private static bool ProjectileHit(Hitbox __instance, ref bool __result, Projectile p, Vector3 position)
         {
-            Plugin.Log("HitboxPatcher: Projectile Hit. Is height based multiplier = " + __instance.heightBasedMultiplier);
+            Plugin.LogWarning("HitboxPatcher: Projectile Hit. Is height based multiplier = " + __instance.heightBasedMultiplier);
 
             float _damageMultiplier = __instance.multiplier;
             bool result;
@@ -22,7 +22,7 @@ namespace RiseOfWar
                 float _multiplier = __instance.transform.worldToLocalMatrix.MultiplyPoint(position).x;
                 float _clamped = Mathf.Clamp01(0.95f - _multiplier);
                 _damageMultiplier = Mathf.Lerp(__instance.minMultiplier, __instance.multiplier, _clamped);
-                Plugin.Log("HitboxPatcher: Damage multiplier = " + _damageMultiplier + ". Default multiplier = " + __instance.multiplier);
+                Plugin.LogWarning("HitboxPatcher: Damage multiplier = " + _damageMultiplier + ". Default multiplier = " + __instance.multiplier);
             }
 
             try
