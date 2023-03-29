@@ -223,7 +223,7 @@ namespace RiseOfWar
                 if (_event.victim == _player)
                 {
                     AddKillfeedItem($"Suicide <#{GameConfiguration.RED_COLOR}>-1 XP</color>", -1);
-                    GlobalKillfeed.instance.AddSuicideItem(_event.victim);
+                    GlobalKillfeed.instance.AddSuicideItem(_player);
                     return;
                 }
 
@@ -264,7 +264,16 @@ namespace RiseOfWar
                 return;
             }
 
-            GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _isHeadshot);
+            if (_event.damage.sourceActor != null)
+            {
+                GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _isHeadshot);
+            }
+            else
+            {
+                _deadActors.Add(_event.victim);
+                AddKillfeedItem($"Suicide <#{GameConfiguration.RED_COLOR}>-1 XP</color>", -1);
+                GlobalKillfeed.instance.AddSuicideItem(_player);
+            }
         }
 
         private void OnPlayerDealtDamage(OnPlayerDealtDamageEvent _event)
