@@ -8,7 +8,7 @@ namespace RiseOfWar
 {
     public static class WeaponExtension
     {
-        private static readonly ConditionalWeakTable<Weapon, WeaponAdditionalData> _data = new ConditionalWeakTable<Weapon, WeaponAdditionalData>();
+        private static ConditionalWeakTable<Weapon, WeaponAdditionalData> _data = new ConditionalWeakTable<Weapon, WeaponAdditionalData>();
 
         public static void ResetSetup(this Weapon weapon)
         {
@@ -223,6 +223,16 @@ namespace RiseOfWar
 
         public static WeaponAdditionalData GetAdditionalData(this Weapon _weapon)
         {
+            if (_weapon == null)
+            {
+                return null;
+            }
+
+            if (_data == null)
+            {
+                _data = new ConditionalWeakTable<Weapon, WeaponAdditionalData>();
+            }
+
             return _data.GetOrCreateValue(_weapon);
         }
 

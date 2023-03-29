@@ -227,7 +227,9 @@ namespace RiseOfWar
                 return;
             }
 
-            if (_current.GetAdditionalData() == null)
+            WeaponAdditionalData _data = _current.GetAdditionalData();
+
+            if (_data == null)
             {
                 return;
             }
@@ -246,9 +248,9 @@ namespace RiseOfWar
 
             _builder.AppendLine();
 
-            _builder.AppendLine("Current cone fire: " + _current.GetAdditionalData().currentConefire.ToString());
+            _builder.AppendLine("Current cone fire: " + _data.currentConefire.ToString());
 
-            if (_current.GetAdditionalData().modifications == null)
+            if (_data.modifications == null)
             {
                 _builder.AppendLine("Modifications are null :(");
             }
@@ -257,45 +259,45 @@ namespace RiseOfWar
 
                 _builder.AppendLine($"Weapon current modifications:");
 
-                if (_current.GetAdditionalData().modifications.GetModification(WeaponModificationType.Bullet) != null)
+                if (_data.modifications.GetModification(WeaponModificationType.Bullet) != null)
                 {
-                    _builder.AppendLine($"Bullet = " + _current.GetAdditionalData().modifications.GetModification(WeaponModificationType.Bullet).name);
+                    _builder.AppendLine($"Bullet = " + _data.modifications.GetModification(WeaponModificationType.Bullet).name);
                 }
                 else
                 {
                     _builder.AppendLine($"Bullet = null");
                 }
 
-                if (_current.GetAdditionalData().modifications.GetModification(WeaponModificationType.Sights) != null)
+                if (_data.modifications.GetModification(WeaponModificationType.Sights) != null)
                 {
-                    _builder.AppendLine($"Sights = " + _current.GetAdditionalData().modifications.GetModification(WeaponModificationType.Sights).name);
+                    _builder.AppendLine($"Sights = " + _data.modifications.GetModification(WeaponModificationType.Sights).name);
                 }
                 else
                 {
                     _builder.AppendLine($"Sights = null");
                 }
 
-                if (_current.GetAdditionalData().modifications.GetModification(WeaponModificationType.Trigger) != null)
+                if (_data.modifications.GetModification(WeaponModificationType.Trigger) != null)
                 {
-                    _builder.AppendLine($"Trigger = " + _current.GetAdditionalData().modifications.GetModification(WeaponModificationType.Trigger).name);
+                    _builder.AppendLine($"Trigger = " + _data.modifications.GetModification(WeaponModificationType.Trigger).name);
                 }
                 else
                 {
                     _builder.AppendLine($"Trigger = null");
                 }
 
-                if (_current.GetAdditionalData().modifications.GetModification(WeaponModificationType.Spring) != null)
+                if (_data.modifications.GetModification(WeaponModificationType.Spring) != null)
                 {
-                    _builder.AppendLine($"Spring = " + _current.GetAdditionalData().modifications.GetModification(WeaponModificationType.Spring).name);
+                    _builder.AppendLine($"Spring = " + _data.modifications.GetModification(WeaponModificationType.Spring).name);
                 }
                 else
                 {
                     _builder.AppendLine($"Spring = null");
                 }
 
-                if (_current.GetAdditionalData().modifications.GetModification(WeaponModificationType.Barrel) != null)
+                if (_data.modifications.GetModification(WeaponModificationType.Barrel) != null)
                 {
-                    _builder.AppendLine($"Barrel = " + _current.GetAdditionalData().modifications.GetModification(WeaponModificationType.Barrel).name);
+                    _builder.AppendLine($"Barrel = " + _data.modifications.GetModification(WeaponModificationType.Barrel).name);
                 }
                 else
                 {
@@ -305,7 +307,7 @@ namespace RiseOfWar
                 _builder.AppendLine($"");
                 _builder.AppendLine($"Weapon possible modifications:");
 
-                foreach (RegisteredWeaponModifications _registeredItem in _current.GetAdditionalData().modifications.possibleModifications)
+                foreach (RegisteredWeaponModifications _registeredItem in _data.modifications.possibleModifications)
                 {
                     _builder.AppendLine($"- {_registeredItem.modification.name} ({_registeredItem.modification.GetModificationType()})");
                 }

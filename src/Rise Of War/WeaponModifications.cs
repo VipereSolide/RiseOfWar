@@ -21,17 +21,18 @@ namespace RiseOfWar
             possibleModifications = new List<RegisteredWeaponModifications>();
         }
 
+        public bool HasModification(WeaponModificationType type)
+        {
+            return modifications[(int)type] != null;
+        }
+
         public Modification GetModification(WeaponModificationType type)
         {
-            switch (type)
-            {
-                case WeaponModificationType.Bullet: return modifications[0];
-                case WeaponModificationType.Sights: return modifications[1];
-                case WeaponModificationType.Trigger: return modifications[2];
-                case WeaponModificationType.Spring: return modifications[3];
-                case WeaponModificationType.Barrel: return modifications[4];
-                default: return modifications[0];
-            }
+            return GetModification((int)type);
+        }
+        public Modification GetModification(int type)
+        {
+            return modifications[type];
         }
         public void SetModification(Modification modification, WeaponModificationType type)
         {

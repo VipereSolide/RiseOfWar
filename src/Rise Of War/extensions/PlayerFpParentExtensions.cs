@@ -47,9 +47,10 @@ namespace RiseOfWar
 
             if (_weapon != null)
             {
-                _upward += _weapon.GetAdditionalData().modifications.GetModifiedValue(_upward, Modification.Modifications.CAMERA_RECOIL_UP);
-                _rightward += _weapon.GetAdditionalData().modifications.GetModifiedValue(_rightward, Modification.Modifications.CAMERA_RECOIL_RIGHT);
-                _variance += _weapon.GetAdditionalData().modifications.GetModifiedValue(_variance, Modification.Modifications.CAMERA_RECOIL_VARIANCE);
+                WeaponAdditionalData _data = _weapon.GetAdditionalData();
+                _upward += _data.modifications.GetModifiedValue(_upward, Modification.Modifications.CAMERA_RECOIL_UP);
+                _rightward += _data.modifications.GetModifiedValue(_rightward, Modification.Modifications.CAMERA_RECOIL_RIGHT);
+                _variance += _data.modifications.GetModifiedValue(_variance, Modification.Modifications.CAMERA_RECOIL_VARIANCE);
             }
 
             if (FpsActorController.instance.GetAdditionalData() != null)

@@ -173,6 +173,24 @@ namespace RiseOfWar
             {
                 _playerStaminaSliderCanvasGroup.alpha = Mathf.Lerp(_playerStaminaSliderCanvasGroup.alpha, 1, Time.deltaTime * 3f);
             }
+
+            Actor _player = FpsActorController.instance.actor;
+            Weapon _weapon = _player.activeWeapon;
+
+            if (_weapon == null)
+            {
+                return;
+            }
+
+            WeaponAdditionalData _additionalData = _weapon.GetAdditionalData();
+
+            for (int _i = 0; _i < _additionalData.modifications.modifications.Length; _i++)
+            {
+                WeaponModificationType _modificationType = (WeaponModificationType)_i;
+                bool _hasModification = _additionalData.modifications.HasModification(_modificationType);
+
+                PlayerUI.instance.SetWeaponModificationActive(_modificationType, _hasModification);
+            }
         }
 
         private void GetSingleton()

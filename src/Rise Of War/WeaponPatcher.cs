@@ -23,6 +23,8 @@ namespace RiseOfWar
                 return;
             }
 
+            __instance.AddData(new WeaponAdditionalData());
+
             // Setting the tuck (is the equivalent of sprinting inside the weapon class) parameter of that weapon
             // to a random string (__null__ here) so we don't have the tuck animation playing. This is so we can
             // implement our own procedural running animation later on.
@@ -52,7 +54,6 @@ namespace RiseOfWar
             }
 
             CreateAimingAnchor(__instance);
-            // CreateAudioSource(__instance);
             CreateRecoilAnchor(__instance);
 
             __instance.configuration = ResourceManager.Instance.GetConfigurationFromProperties(__instance, __instance.weaponProperties());
@@ -79,7 +80,6 @@ namespace RiseOfWar
                 {
                     foreach (RegisteredWeaponModifications _modification in _additionalData.modifications.possibleModifications)
                     {
-                        PlayerUI.instance.SetWeaponModificationActive(_modification.modification.GetModificationType(), true);
                         _additionalData.modifications.SetModification(_modification.modification, _modification.modification.GetModificationType());
                     }
                 }
@@ -123,7 +123,7 @@ namespace RiseOfWar
             _aimingAnchor.localPosition = Vector3.zero;
             _aimingAnchor.localRotation = Quaternion.identity;
 
-            __instance.AddData(new WeaponAdditionalData(_aimingAnchor, true));
+            __instance.GetAdditionalData().aimingAnchor = _aimingAnchor;
             __instance.transform.SetParent(_aimingAnchor.transform, true);
 
             Plugin.Log($"WeaponPatcher: Successfully initialized aiming anchor for weapon \"{__instance.name}\"!");
