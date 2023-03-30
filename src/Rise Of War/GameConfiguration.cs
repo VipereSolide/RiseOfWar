@@ -16,6 +16,8 @@ namespace RiseOfWar
         public static string defaultHurtPath = "/Resources/Sounds/Damage/Pain/";
         public static string defaultMeshModificationsPath = "/Resources/Data/Mesh Modifications/";
 
+        public static readonly int interractableLayer = 9;
+
         /// <summary>
         /// Represents the field of view of the camera when any unscoped weapon is aiming.
         /// </summary>
@@ -26,6 +28,8 @@ namespace RiseOfWar
         public static float projectileLifetime = 20f;
 
         public static float whistleDelay = 7;
+
+        public static float weaponPickupDistance = 15;
 
         /// <summary>
         /// The time the hitmarkers stay active on screen before disappearing.

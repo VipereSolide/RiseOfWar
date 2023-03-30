@@ -1,11 +1,14 @@
-﻿using System;
+﻿using System.Runtime.CompilerServices;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using UnityEngine;
+using System;
+
 using Random = UnityEngine.Random;
+using UnityEngine;
 
 namespace RiseOfWar
 {
+    using Events;
+
     public static class WeaponExtension
     {
         private static ConditionalWeakTable<Weapon, WeaponAdditionalData> _data = new ConditionalWeakTable<Weapon, WeaponAdditionalData>();

@@ -12,6 +12,17 @@ namespace RiseOfWar
         [HarmonyPrefix]
         private static void DropMemberPatch(Squad __instance, ActorController a)
         {
+            if (a.actor.IsSeated())
+            {
+                if (a.actor.seat.vehicle != null)
+                {
+                    if (a.actor.seat.vehicle.dead)
+                    {
+                        return;
+                    }
+                }
+            }
+
             if (a == __instance.Leader())
             {
                 foreach (ActorController _actor in __instance.members)

@@ -39,21 +39,54 @@ namespace RiseOfWar
         [HarmonyPrefix]
         static bool DiePatch(Actor __instance, DamageInfo info, bool isSilentKill)
         {
-            Plugin.Log($"DiePatch: Killing actor \"{__instance.name}\"...");
+            Plugin.Log($"ActorPatcher: Killing actor \"{__instance.name}\"...");
             ActorAdditionalData _actorAdditional = __instance.GetAdditionalData();
-
-            /*
-            if (__instance.dead || Time.time < _actorAdditional.lastTimeDead + 1)
-            {
-                Plugin.Log($"DiePatch: Actor was last time hit at = " + _actorAdditional.lastTimeDead + "; Current time = " + Time.time);
-                return false;
-            }
-            */
-
             _actorAdditional.lastTimeDead = Time.time;
+
             EventManager.onActorDie.Invoke(new OnActorDieEvent(info, __instance, isSilentKill));
 
+            DropActorWeapon(__instance);
             return true;
+        }
+
+        static void DropActorWeapon(Actor _actor)
+        {
+            Weapon _weapon = _actor.activeWeapon;
+
+            if (_weapon == null)
+            {
+                return;
+            }
+
+            Plugin.Log("ActorPatcher: Weapon drop has been called.");
+
+            GameObject _weaponPlaceholder = GameObject.Instantiate(_weapon.transform).gameObject;
+
+            Vector3 _position = _weapon.transform.position;
+            _position.y = _actor.Position().y + 0.15f;
+
+            _weaponPlaceholder.transform.position = _position;
+            _weaponPlaceholder.transform.localScale = Vector3.one * 1.15f;
+
+            GameObject.Destroy(_weaponPlaceholder.GetComponent<Weapon>());
+            _weaponPlaceholder.transform.SetLayerRecursively(GameConfiguration.interractableLayer);
+
+            BoxCollider _collider = _weaponPlaceholder.AddComponent<BoxCollider>();
+            _collider.center = Vector3.zero;
+            _collider.size = new Vector3(0.25f, 0.25f, 0.6f);
+
+            DroppedWeapon _dropped = _weaponPlaceholder.AddComponent<DroppedWeapon>();
+            _dropped.prefab = _weapon.weaponEntry;
+
+            foreach(Transform _child in _weaponPlaceholder.transform)
+            {
+                string _childName = _child.name.ToLower();
+
+                if (_childName == "armature" || _childName == "hands")
+                {
+                    _child.gameObject.SetActive(false);
+                }
+            }
         }
 
         [HarmonyPatch(typeof(Actor), "Damage")]

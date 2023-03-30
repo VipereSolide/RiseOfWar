@@ -6,6 +6,7 @@ using Random = UnityEngine.Random;
 namespace RiseOfWar
 {
     using WeaponMeshModificator;
+    using Events;
 
     public class WeaponPatcher
     {
@@ -116,17 +117,6 @@ namespace RiseOfWar
             }
 
             return false;
-        }
-
-        private static void CreateAudioSource(Weapon __instance)
-        {
-            GameObject _audioSource = new GameObject("Audio Source");
-            _audioSource.transform.SetParent(__instance.transform, false);
-            AudioSource _source = _audioSource.AddComponent<AudioSource>();
-            _source.outputAudioMixerGroup = ((AudioSource)Traverse.Create(__instance).Field("audio").GetValue()).outputAudioMixerGroup;
-            _source.loop = false;
-            _source.playOnAwake = false;
-            __instance.GetAdditionalData().source = _source;
         }
 
         private static void CreateAimingAnchor(Weapon __instance)
@@ -488,31 +478,5 @@ namespace RiseOfWar
 
             return false;
         }
-
-        /*
-        [HarmonyPatch(typeof(Weapon), "Shoot", new Type[] { typeof(Vector3), typeof(bool) })]
-        [HarmonyPostfix]
-        private static void ShootPatchAfter(Weapon __instance)
-        {
-        }
-        
-        [HarmonyPatch(typeof(Weapon), "StartAdvancedReload")]
-        [HarmonyPrefix]
-        private static void StartAdvancedReloadPatch(Weapon __instance)
-        {
-        }
-
-        [HarmonyPatch(typeof(Weapon), "AdvancedReloadNextMotion")]
-        [HarmonyPrefix]
-        private static void AdvancedReloadNextMotionPatch(Weapon __instance)
-        {
-        }
-
-        [HarmonyPatch(typeof(Weapon), "EndAdvancedReload")]
-        [HarmonyPrefix]
-        private static void EndAdvancedReloadPatch(Weapon __instance)
-        {
-        }
-        */
     }
 }
