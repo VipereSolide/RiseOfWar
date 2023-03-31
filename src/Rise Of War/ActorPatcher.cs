@@ -89,7 +89,7 @@ namespace RiseOfWar
 
                 if (_childName == "armature" || _childName == "hands")
                 {
-                    _child.gameObject.SetActive(false);
+                    GameObject.Destroy(_child.gameObject);
                 }
             }
         }

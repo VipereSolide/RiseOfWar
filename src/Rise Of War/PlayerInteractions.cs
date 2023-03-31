@@ -18,22 +18,10 @@ namespace RiseOfWar
 
             if (Input.GetKeyDown(_interract))
             {
-                RaycastHit _hit;
-                PlayerFpParent _origin = PlayerFpParent.instance;
-
-                if (Physics.Raycast(
-                    _origin.fpCamera.transform.position,
-                    _origin.fpCamera.transform.forward,
-                    out _hit,
-                    GameConfiguration.weaponPickupDistance
-                ))
+                DroppedWeapon _weapon = DroppedWeaponRegistry.GetClosestActiveDroppedWeapon();
+                if (_weapon != null)
                 {
-                    DroppedWeapon _weapon = _hit.transform.GetComponent<DroppedWeapon>();
-
-                    if (_weapon != null)
-                    {
-                        _weapon.Pickup(FpsActorController.instance.actor);
-                    }
+                    _weapon.Pickup(ActorManager.instance.player);
                 }
             }
 

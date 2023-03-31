@@ -29,7 +29,9 @@ namespace RiseOfWar
 
         public static float whistleDelay = 7;
 
-        public static float weaponPickupDistance = 15;
+        public static float weaponPickupDistance = 1.25f;
+
+        public static float droppedWeaponLifetime = 15;
 
         /// <summary>
         /// The time the hitmarkers stay active on screen before disappearing.
