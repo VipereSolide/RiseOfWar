@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+
+using UnityEngine;
 using HarmonyLib;
 
 namespace RiseOfWar
@@ -41,7 +43,6 @@ namespace RiseOfWar
         {
             Plugin.Log($"ActorPatcher: Killing actor \"{__instance.name}\"...");
             ActorAdditionalData _actorAdditional = __instance.GetAdditionalData();
-            _actorAdditional.lastTimeDead = Time.time;
 
             EventManager.onActorDie.Invoke(new OnActorDieEvent(info, __instance, isSilentKill));
 
@@ -53,7 +54,7 @@ namespace RiseOfWar
         {
             Weapon _weapon = _actor.activeWeapon;
 
-            if (_weapon == null)
+            if (_weapon == null || _actor.dead)
             {
                 return;
             }
@@ -77,8 +78,12 @@ namespace RiseOfWar
 
             DroppedWeapon _dropped = _weaponPlaceholder.AddComponent<DroppedWeapon>();
             _dropped.prefab = _weapon.weaponEntry;
+            _dropped.configuration = _weapon.configuration;
+            _dropped.currentAmmo = _weapon.ammo;
+            _dropped.currentSpareAmmo = _weapon.spareAmmo;
+            _dropped.modifications = _weapon.GetAdditionalData().modifications;
 
-            foreach(Transform _child in _weaponPlaceholder.transform)
+            foreach (Transform _child in _weaponPlaceholder.transform)
             {
                 string _childName = _child.name.ToLower();
 

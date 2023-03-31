@@ -13,7 +13,7 @@ namespace RiseOfWar
     {
         private static ConditionalWeakTable<Weapon, WeaponAdditionalData> _data = new ConditionalWeakTable<Weapon, WeaponAdditionalData>();
 
-        public static void ResetSetup(this Weapon weapon)
+        public static void ResetSetup(this Weapon weapon, bool fullReset = false)
         {
             weapon.ammo = weapon.configuration.ammo;
             weapon.spareAmmo = weapon.configuration.spareAmmo;
@@ -49,13 +49,13 @@ namespace RiseOfWar
         {
             if (weapon == null)
             {
-                Plugin.LogError("WeaponPatcher: Cannot handle aiming anchor for null weapon!");
+                Plugin.LogError("WeaponExtension: Cannot handle aiming anchor for null weapon!");
                 return;
             }
 
             if (!WeaponRegistry.IsCustomWeapon(weapon))
             {
-                Plugin.LogError("WeaponPatcher: Cannot handle aiming anchor for no custom weapon!");
+                Plugin.LogError("WeaponExtension: Cannot handle aiming anchor for no custom weapon!");
                 return;
             }
 
