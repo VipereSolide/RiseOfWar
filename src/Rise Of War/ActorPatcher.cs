@@ -15,6 +15,11 @@ namespace RiseOfWar
         [HarmonyPostfix]
         private static void Update(Actor __instance)
         {
+            if (__instance.scoreboardEntry == null || __instance.scoreboardEntry.fText == null || __instance.GetAdditionalData() == null)
+            {
+                return;
+            }
+
             __instance.scoreboardEntry.flagCaptures = __instance.GetAdditionalData().score;
             __instance.scoreboardEntry.fText.text = __instance.scoreboardEntry.flagCaptures.ToString();
         }
