@@ -29,7 +29,7 @@ namespace RiseOfWar
 
         public static float whistleDelay = 7;
 
-        public static float weaponPickupDistance = 1.25f;
+        public static float weaponPickupDistance = 2f;
 
         public static float droppedWeaponLifetime = 15;
 

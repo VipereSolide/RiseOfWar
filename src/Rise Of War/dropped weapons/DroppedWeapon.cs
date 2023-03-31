@@ -54,16 +54,24 @@ namespace RiseOfWar
             bool _isPlayerVisible = false;
             RaycastHit _hit;
 
-            if (Physics.Raycast(transform.position, transform.position - _player.Position(), out _hit))
+            if (Physics.Raycast(transform.position + Vector3.up * 0.1f, (_player.Position() + Vector3.up * 0.1f - transform.position).normalized, out _hit))
             {
+                Debug.Log(_hit.collider.name + " ; " + _hit.transform.gameObject.tag);
+
+                if (_hit.collider.tag == "Untagged")
+                {
+                    return;
+                }
+
                 Actor _potentialPlayer = _hit.transform.GetComponent<Actor>();
+
                 if (_potentialPlayer == _player)
                 {
                     _isPlayerVisible = true;
                 }
                 else
                 {
-                    _potentialPlayer = _hit.transform.GetComponentInParent<Actor>();
+                    _potentialPlayer = _hit.transform.GetComponentInChildren<Actor>();
                     if (_potentialPlayer == _player)
                     {
                         _isPlayerVisible = true;
