@@ -9,6 +9,8 @@ namespace RiseOfWar
 
     public class ActorPatcher
     {
+        private static Dictionary<Actor, bool> _hasDroppedWeapon = new Dictionary<Actor, bool>();
+
         [HarmonyPatch(typeof(Actor), "Update")]
         [HarmonyPostfix]
         private static void Update(Actor __instance)
@@ -22,6 +24,15 @@ namespace RiseOfWar
         static void SpawnAtPatch(Actor __instance)
         {
             EventManager.onActorSpawn.Invoke(new OnActorSpawnEvent(__instance));
+
+            if (_hasDroppedWeapon.ContainsKey(__instance))
+            {
+                _hasDroppedWeapon[__instance] = false;
+            }
+            else
+            {
+                _hasDroppedWeapon.Add(__instance, false);
+            }
         }
 
         [HarmonyPatch(typeof(Actor), "SpawnWeapon")]
@@ -53,6 +64,20 @@ namespace RiseOfWar
         static void DropActorWeapon(Actor _actor)
         {
             Weapon _weapon = _actor.activeWeapon;
+
+            if (_hasDroppedWeapon.ContainsKey(_actor))
+            {
+                if (_hasDroppedWeapon[_actor])
+                {
+                    return;
+                }
+
+                _hasDroppedWeapon[_actor] = true;
+            }
+            else
+            {
+                _hasDroppedWeapon.Add(_actor, true);
+            }
 
             if (_weapon == null || _actor.dead)
             {
