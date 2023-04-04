@@ -9,14 +9,144 @@ namespace RiseOfWar
 {
     using Events;
 
-    public static class WeaponExtension
+    public static partial class WeaponExtension
     {
+        public static string GetWeaponAnimationName(this Weapon weapon, WeaponAnimationType animation)
+        {
+            WeaponAdditionalData _additionalData = weapon.GetAdditionalData();
+
+            switch (animation)
+            {
+                case WeaponAnimationType.Idle:
+                    return _additionalData.idleAnimationName;
+                case WeaponAnimationType.Fire:
+                    return _additionalData.fireAnimationName;
+                case WeaponAnimationType.Reload:
+                    return _additionalData.reloadAnimationName;
+                case WeaponAnimationType.Draw:
+                    return _additionalData.unholsterAnimationName;
+                default:
+                    Plugin.LogWarning($"WeaponExtension: Could find animation name for animation type \"{animation}\"!");
+                    return "";
+            }
+        }
+
         private static ConditionalWeakTable<Weapon, WeaponAdditionalData> _data = new ConditionalWeakTable<Weapon, WeaponAdditionalData>();
 
         public static void ResetSetup(this Weapon weapon, bool fullReset = false)
         {
             weapon.ammo = weapon.configuration.ammo;
             weapon.spareAmmo = weapon.configuration.spareAmmo;
+        }
+
+        public static void PlayAnimation(this Weapon weapon, WeaponAnimationType animation, bool stopBeforePlaying = false)
+        {
+            Plugin.Log($"WeaponExtension: Playing weapon animation \"{animation}\".");
+            weapon.PlayAnimation(weapon.GetWeaponAnimationName(animation), stopBeforePlaying);
+        }
+
+        public static void PlayAnimation(this Weapon weapon, string animationName, bool stopBeforePlaying = false)
+        {
+            Animation _animation = weapon.GetAdditionalData().animation;
+
+            if (_animation == null)
+            {
+                return;
+            }
+
+            if (stopBeforePlaying)
+            {
+                _animation.Stop();
+            }
+
+            bool _hasPlayed = _animation.Play(animationName);
+
+            if (_hasPlayed == false)
+            {
+                Plugin.LogWarning($"WeaponExtension: Could not play animation \"{animationName}\".");
+            }
+
+            AnimationClip _animationClip = _animation.GetClip(animationName);
+            Plugin.Log($"WeaponExtension: Information about animation clip \"{_animationClip.name}\":");
+            Plugin.Log($"WeaponExtension: * Is looping = {_animationClip.isLooping}.");
+            Plugin.Log($"WeaponExtension: * Is legacy = {_animationClip.legacy}.");
+            Plugin.Log($"WeaponExtension: * Length = {_animationClip.length}.");
+            Plugin.Log($"WeaponExtension: * Apparent Speed = {_animationClip.apparentSpeed}.");
+            Plugin.Log($"WeaponExtension: * Average Angular Speed = {_animationClip.averageAngularSpeed}.");
+            Plugin.Log($"WeaponExtension: * Average Duration = {_animationClip.averageDuration}.");
+            Plugin.Log($"WeaponExtension: * Average Speed = {_animationClip.averageSpeed}.");
+            Plugin.Log($"WeaponExtension: * Empty = {_animationClip.empty}.");
+            Plugin.Log($"WeaponExtension: * Frame rate = {_animationClip.frameRate}.");
+            Plugin.Log($"WeaponExtension: * Has Generic Root Transform = {_animationClip.hasGenericRootTransform}.");
+            Plugin.Log($"WeaponExtension: * Has Motion Curves = {_animationClip.hasMotionCurves}.");
+            Plugin.Log($"WeaponExtension: * Has Motion Float Curves = {_animationClip.hasMotionFloatCurves}.");
+            Plugin.Log($"WeaponExtension: * Has Root Curves = {_animationClip.hasRootCurves}.");
+            Plugin.Log($"WeaponExtension: * Human Motion = {_animationClip.humanMotion}.");
+            Plugin.Log($"WeaponExtension: * Is Human Motion = {_animationClip.isHumanMotion}.");
+            Plugin.Log($"WeaponExtension: * Wrap Mode = {_animationClip.wrapMode}.");
+        }
+
+        public static void AddWeaponAnimationSetup(this Weapon weapon)
+        {
+            Animation _animation = weapon.animator.gameObject.AddComponent<Animation>();
+            Animator _animator = weapon.animator;
+
+            WeaponAdditionalData _additionalData = weapon.GetAdditionalData();
+
+            _additionalData.animation = _animation;
+            _animation.animatePhysics = true;
+            _animation.playAutomatically = false;
+            _animation.wrapMode = WrapMode.Loop;
+            _animation.cullingType = AnimationCullingType.BasedOnRenderers;
+            _animation.Clear();
+
+            Plugin.EndLogGroup();
+            Plugin.Log($"WeaponExtension: Getting animation clips from animator...");
+
+            AnimationClip[] _animationClips = _animator.runtimeAnimatorController.animationClips;
+            Plugin.Log($"WeaponExtension: Found {_animationClips.Length} animation clips.");
+            Plugin.Log($"WeaponExtension: Adding animation clips to animation component:");
+
+            foreach (AnimationClip _animationClip in _animationClips)
+            {
+                _animationClip.legacy = true;
+                _animationClip.wrapMode = WrapMode.Clamp;
+
+                _animation.AddClip(_animationClip, _animationClip.name);
+                _animation[_animationClip.name].speed = 1;
+
+                Plugin.Log($"WeaponExtension: * \"{_animationClip.name}\".");
+
+                if (string.IsNullOrEmpty(_additionalData.fireAnimationName) && _animationClip.name.ToLower().Contains("fire"))
+                {
+                    Plugin.Log($"WeaponExtension: Found fire animation.");
+                    _additionalData.fireAnimationName = _animationClip.name;
+                }
+                else if (string.IsNullOrEmpty(_additionalData.idleAnimationName) && _animationClip.name.ToLower().Contains("idle"))
+                {
+                    Plugin.Log($"WeaponExtension: Found idle animation.");
+                    _additionalData.idleAnimationName = _animationClip.name;
+                }
+                else if (string.IsNullOrEmpty(_additionalData.reloadAnimationName) && _animationClip.name.ToLower().Contains("reload"))
+                {
+                    Plugin.Log($"WeaponExtension: Found reload animation.");
+                    _additionalData.reloadAnimationName = _animationClip.name;
+                }
+                else if (string.IsNullOrEmpty(_additionalData.unholsterAnimationName) && _animationClip.name.ToLower().Contains("unholster") || _animationClip.name.ToLower().Contains("draw"))
+                {
+                    Plugin.Log($"WeaponExtension: Found unholster animation.");
+                    _additionalData.unholsterAnimationName = _animationClip.name;
+                }
+            }
+
+            Plugin.EndLogGroup();
+
+            weapon.animator.enabled = false;
+        }
+
+        private static void SetWeaponAnimationSpeed(this Weapon weapon, string animationName, float speed)
+        {
+            Animator _animator = weapon.animator;
         }
 
         public static void HandleCurrentConefire(this Weapon weapon)

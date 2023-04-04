@@ -84,11 +84,11 @@ namespace RiseOfWar
         {
             string message = "GameManager: " + string.Format("Handling argument: {0} {1}", argument, parameter) + ".";
             ScriptConsole.instance.LogInfo(message);
-            Debug.Log(message);
+            Plugin.Log(message);
 
             if (argument == "-debug")
             {
-                Debug.Log("GameManager: Using debug mode.");
+                Plugin.Log("GameManager: Using debug mode.");
 
                 GameConfiguration.isDebugModeEnabled = true;
                 return false;
@@ -96,7 +96,7 @@ namespace RiseOfWar
 
             if (argument == "-generatenavcache")
             {
-                Debug.Log("GameManager: Generate cache mode enabled.");
+                Plugin.Log("GameManager: Generate cache mode enabled.");
 
                 __instance.generateNavCache = true;
                 __instance.navCacheWritebackPath = parameter;
@@ -107,7 +107,7 @@ namespace RiseOfWar
 
             if (argument == "-custommap")
             {
-                Debug.Log("GameManager: Loading custom map: " + parameter + ".");
+                Plugin.Log($"GameManager: Loading custom map \"{parameter}\".");
 
                 InstantActionMaps.MapEntry mapEntry = new InstantActionMaps.MapEntry();
                 mapEntry.isCustomMap = true;
@@ -120,7 +120,7 @@ namespace RiseOfWar
 
             if (argument == "-editmap")
             {
-                Debug.Log("GameManager: Loading map editor for map: " + parameter + ".");
+                Plugin.Log($"GameManager: Loading map editor for map = \"{parameter}\".");
 
                 InstantActionMaps.MapEntry entry = SceneConstructor.InstantActionMapsEntry(parameter, SceneConstructor.Mode.Edit);
                 __instance.CallPrivateMethod("SetupDefaultGameParameters");
@@ -255,7 +255,7 @@ namespace RiseOfWar
 
                 string _errorLog = "GameManager: " + string.Format("Unrecognized Argument {0}", argument) + ".";
                 ScriptConsole.instance.LogInfo(_errorLog);
-                Debug.LogWarning(_errorLog);
+                Plugin.LogWarning(_errorLog);
                 return false;
             }
 

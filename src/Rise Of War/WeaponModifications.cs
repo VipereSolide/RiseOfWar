@@ -62,12 +62,16 @@ namespace RiseOfWar
                     continue;
                 }
 
-                Debug.Log("modification has modifications (lol): " + _modification.modifications == null);
-                Modification.Modifications _m = _modification.modifications;
-
-                if (_m.HasParam(type))
+                if (_modification.modifications == null)
                 {
-                    Param _param = _m.FindParam(type);
+                    Plugin.LogWarning("WeaponModifications: Could not find modifications attached to this weapon modification.");
+                }
+
+                Modification.Modifications _weaponModifications = _modification.modifications;
+
+                if (_weaponModifications.HasParam(type))
+                {
+                    Param _param = _weaponModifications.FindParam(type);
                     float _value = MathHelper.FloatHelper.Parse(_param.text);
 
                     if (_param.operation == Param.OPERATION_ADD)

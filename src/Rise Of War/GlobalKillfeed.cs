@@ -104,7 +104,7 @@ namespace RiseOfWar
         public void AddSuicideItem(Actor player)
         {
             string _playerColor = GameConfiguration.BLUE_COLOR;
-            Actor _localPlayer = FpsActorController.instance.actor;
+            Actor _localPlayer = ReferenceManager.player;
 
             if (player.team != _localPlayer.team)
             {
@@ -137,7 +137,7 @@ namespace RiseOfWar
             string _killerTeam = (killer.team == 0) ? GameConfiguration.BLUE_COLOR : GameConfiguration.RED_COLOR;
             string _weapon = (isHeadshot) ? "Headshot" : WeaponRegistry.GetRealName(source.name);
 
-            Actor _player = FpsActorController.instance.actor;
+            Actor _player = ReferenceManager.player;
 
             if (killed == _player || _player.controller.GetSquad().members.Contains(killed.controller))
             {

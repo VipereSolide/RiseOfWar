@@ -56,8 +56,6 @@ namespace RiseOfWar
 
             if (Physics.Raycast(transform.position + Vector3.up * 0.1f, (_player.Position() + Vector3.up * 0.1f - transform.position).normalized, out _hit))
             {
-                Debug.Log(_hit.collider.name + " ; " + _hit.transform.gameObject.tag);
-
                 if (_hit.collider.tag == "Untagged")
                 {
                     return;
@@ -138,13 +136,21 @@ namespace RiseOfWar
 
         private void ApplyWeaponSpecs()
         {
-            Plugin.Log("DroppedWeapon: Setting up correct weapon stats...");
+            Plugin.Log($"DroppedWeapon: Setting up correct weapon stats for weapon \"{_weapon.name}\"...");
 
-            _weapon.ammo = currentAmmo;
-            _weapon.spareAmmo = currentSpareAmmo;
-            _weapon.GetAdditionalData().modifications = modifications;
+            try
+            {
+                _weapon.ammo = currentAmmo;
+                _weapon.spareAmmo = currentSpareAmmo;
+                _weapon.GetAdditionalData().modifications = modifications;
+            }
+            catch (Exception _exception)
+            {
+                Plugin.LogWarning($"DroppedWeapon: Could not set up correct weapon stats for weapon \"{_weapon.name}\". " + _exception);
+                return;
+            }
 
-            Plugin.Log("DroppedWeapon: Setted up correct weapon stats.");
+            Plugin.Log($"DroppedWeapon: Successfully set up correct weapon stats for weapon \"{_weapon.name}\".");
         }
     }
 }

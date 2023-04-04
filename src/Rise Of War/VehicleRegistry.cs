@@ -23,8 +23,7 @@ namespace RiseOfWar
 
         public static void OnPlayerSpawned(OnPlayerSpawnedEvent _event)
         {
-            Actor _player = FpsActorController.instance.actor;
-
+            Actor _player = ReferenceManager.player;
 
             int _width = 0;
             int _length = 0;
@@ -38,6 +37,7 @@ namespace RiseOfWar
                     _vehicles.Add(_vehiclePrefab);
                 }
             }
+
             Plugin.Log($"VehicleRegistry: Vehicle counts = {_vehicles.Count}.");
 
             foreach (GameObject _vehiclePrefab in _vehicles)

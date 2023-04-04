@@ -54,7 +54,7 @@ namespace RiseOfWar
         private void Awake()
         {
             _source = BepInEx.Logging.Logger.CreateLogSource(" Rise Of War");
-            Plugin.Log("Initializing plugin Rise Of War...");
+            Log("Initializing plugin...");
 
             RegisterPatches();
 
@@ -77,9 +77,14 @@ namespace RiseOfWar
             {
                 _message = _message.Insert(_message.IndexOf(":"), $".{caller}");
             }
+            else
+            {
+                _message = _message.Insert(0, $"{caller}: ");
+            }
 
             _source.LogInfo(_message);
         }
+        
         public static void LogWarning(string _message, [CallerMemberName] string caller = null)
         {
             if (_message.Contains(":"))
@@ -89,6 +94,7 @@ namespace RiseOfWar
 
             _source.LogWarning(_message);
         }
+        
         public static void LogError(string _message, [CallerMemberName] string caller = null)
         {
             if (_message.Contains(":"))
@@ -101,7 +107,7 @@ namespace RiseOfWar
 
         public static void EndLogGroup()
         {
-            _source.LogInfo("______________________\n");
+            _source.LogInfo("");
         }
 
         private void RegisterPatches()

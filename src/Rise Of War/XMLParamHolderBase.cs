@@ -31,7 +31,7 @@ namespace RiseOfWar
                 }
             }
 
-            Debug.LogError($"WeaponGroupBase: Couldn't find param named \"{_name}\"!");
+            Plugin.LogError($"WeaponGroupBase: Could not find param named \"{_name}\"!");
             return null;
         }
 
@@ -52,9 +52,7 @@ namespace RiseOfWar
 
         public virtual string GetString(string name)
         {
-            Param _output = null;
-
-            if (TryFindParam(name, out _output))
+            if (TryFindParam(name, out Param _output))
             {
                 return _output.text;
             }
@@ -64,9 +62,7 @@ namespace RiseOfWar
 
         public virtual int GetInt(string _name)
         {
-            Param _output = null;
-
-            if (TryFindParam(_name, out _output))
+            if (TryFindParam(_name, out Param _output))
             {
                 return Mathf.CeilToInt(ParseToFloat(_output.text));
             }
@@ -76,24 +72,9 @@ namespace RiseOfWar
 
         public virtual float GetFloat(string _name)
         {
-            // Debug.Log($"name: {_name}");
-            Param _output = null;
-
-            if (TryFindParam(_name, out _output))
+            if (TryFindParam(_name, out Param _output))
             {
-                // Debug.Log($"output is null: {_output == null}");
-                string _toparse = _output.text;
-                // Debug.Log($"output.text: {_toparse.Replace(" ","&&").Replace("\n","&&").Replace("\r","&&").Replace("\\","")}");
-                try
-                {
-                    return ParseToFloat(_output.text);
-                }
-                catch (Exception _ex)
-                {
-                    // Debug.LogError("TO PARSE=====" + _toparse);
-                    Plugin.LogError($"Couldn't parse float: " + _ex);
-                    return 0;
-                }
+                return ParseToFloat(_output.text);
             }
 
             return 0;
@@ -101,9 +82,7 @@ namespace RiseOfWar
 
         public virtual Vector2 GetVector2(string _name)
         {
-            Param _output = null;
-
-            if (TryFindParam(_name, out _output))
+            if (TryFindParam(_name, out Param _output))
             {
                 return new Vector2(ParseToFloat(_output.vx), ParseToFloat(_output.vy));
             }
@@ -113,9 +92,7 @@ namespace RiseOfWar
 
         public virtual Vector3 GetVector3(string _name)
         {
-            Param _output;
-
-            if (TryFindParam(_name, out _output))
+            if (TryFindParam(_name, out Param _output))
             {
                 return new Vector3(ParseToFloat(_output.vx), ParseToFloat(_output.vy), ParseToFloat(_output.vz));
             }
@@ -125,9 +102,7 @@ namespace RiseOfWar
 
         public virtual bool GetBool(string _name)
         {
-            Param _output = null;
-
-            if (TryFindParam(_name, out _output))
+            if (TryFindParam(_name, out Param _output))
             {
                 return bool.Parse(_output.text.ToLower());
             }

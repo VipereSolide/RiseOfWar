@@ -48,10 +48,16 @@ namespace RiseOfWar
             OnCapturePointInteractionEvent _interaction = new OnCapturePointInteractionEvent(OnCapturePointInteractionEvent.InteractionType.Lost, ActorManager.AliveActorsInRange(__instance.transform.position, __instance.captureRange), __instance.owner, team, __instance);
             Actor[] _actorsInRange = ActorsInCapturePointRange(__instance);
 
+            Plugin.EndLogGroup();
+
+            Plugin.Log($"CapturePointPatcher: Capture point has changed of owner (from owner {initialOwner} to owner {team}). Actors in range: ");
+
             foreach (Actor _actor in _actorsInRange)
             {
-                Debug.Log("Actors in range: " + _actor.name);
+                Plugin.Log("CapturePointPatcher: * " + _actor.name);
             }
+
+            Plugin.EndLogGroup();
 
             if (_isNeutralized && __instance.owner == GameManager.PlayerTeam())
             {

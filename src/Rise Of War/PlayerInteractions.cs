@@ -41,7 +41,7 @@ namespace RiseOfWar
         public void Whistle()
         {
             _lastWhistleTime = Time.time + GameConfiguration.whistleDelay;
-            SoundManager.instance.ForcePlaySound(ResourceManager.Instance.whistleSounds[Random.Range(0, ResourceManager.Instance.whistleSounds.Length)]);
+            SoundManager.instance.ForcePlaySound(ResourceManager.Instance.WhistleAudioClips[Random.Range(0, ResourceManager.Instance.WhistleAudioClips.Length)]);
         }
     }
 }

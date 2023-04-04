@@ -42,7 +42,7 @@ namespace RiseOfWar
         {
             if (_camera == null)
             {
-                Plugin.Log("FpsActorControllerExtensions: Disabling seat camera.");
+                Plugin.Log("FpsActorControllerExtensions: Disabling seat camera...");
                 _fpsActorController.CancelOverrideCamera();
                 _fpsActorController.EnableFirstPersonRenderingMode();
                 _fpsActorController.FirstPersonCamera();

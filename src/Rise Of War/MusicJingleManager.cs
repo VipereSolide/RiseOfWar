@@ -24,10 +24,10 @@ namespace RiseOfWar
         {
             if (team == 0)
             {
-                return ResourceManager.Instance.captureJingleGe;
+                return ResourceManager.Instance.CaptureJingleGermany;
             }
 
-            return ResourceManager.Instance.captureJingleRu;
+            return ResourceManager.Instance.CaptureJingleSovietUnion;
         }
 
         private void OnCapturePointInteractionListener(OnCapturePointInteractionEvent _event)
@@ -38,10 +38,10 @@ namespace RiseOfWar
                     SoundManager.instance.ForcePlaySound(GetJingleFromTeam(0));
                     break;
                 case OnCapturePointInteractionEvent.InteractionType.Neutralized:
-                    SoundManager.instance.ForcePlaySound(ResourceManager.Instance.captureJingleCapturePointNeutralized);
+                    SoundManager.instance.ForcePlaySound(ResourceManager.Instance.CaptureJinglePointNeutralized);
                     break;
                 case OnCapturePointInteractionEvent.InteractionType.Lost:
-                    SoundManager.instance.ForcePlaySound(ResourceManager.Instance.captureJingleCapturePointLost);
+                    SoundManager.instance.ForcePlaySound(ResourceManager.Instance.CaptureJinglePointLost);
                     break;
                 case OnCapturePointInteractionEvent.InteractionType.EnemyCapture:
                     SoundManager.instance.ForcePlaySound(GetJingleFromTeam(1));

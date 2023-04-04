@@ -174,7 +174,7 @@ namespace RiseOfWar
                 _playerStaminaSliderCanvasGroup.alpha = Mathf.Lerp(_playerStaminaSliderCanvasGroup.alpha, 1, Time.deltaTime * 3f);
             }
 
-            Actor _player = FpsActorController.instance.actor;
+            Actor _player = ReferenceManager.player;
             Weapon _weapon = _player.activeWeapon;
 
             if (_weapon == null)

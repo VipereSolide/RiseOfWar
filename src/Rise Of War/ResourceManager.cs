@@ -1,157 +1,171 @@
-﻿using HarmonyLib;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Xml.Serialization;
+using System.Collections;
+using System.IO;
+using System;
+
 using UnityEngine;
 
 namespace RiseOfWar
 {
     using WeaponMeshModificator;
 
-    public partial class ResourceManager : MonoBehaviour
+    public class ResourceManager : MonoBehaviour
     {
         public static ResourceManager Instance { get; private set; }
 
-        private AudioClip[] _musicThemes;
-        private AudioClip _tempAudioClip;
-        private GameObject _loadingScreen;
-        private AudioClip _captureJingleRU;
-        private AudioClip _captureJingleUS;
-        private AudioClip _captureJingleGE;
-        private AudioClip _captureJingleLost;
-        private AudioClip _captureJingleNeutralized;
-        private AudioClip[] _whistleSounds;
-        private AudioClip[] _hurtSounds;
+        private AudioClip[] _musicThemesAudioClips;
+
+        private AudioClip _captureJingleSovietUnion;
+        private AudioClip _captureJingleUnitedStates;
+        private AudioClip _captureJingleGermany;
+        private AudioClip _captureJinglePointLost;
+        private AudioClip _captureJinglePointNeutralized;
+
+        private AudioClip[] _whistleAudioClips;
+        private AudioClip[] _hurtAudioClips;
 
         private GameObject _projectilePrefab;
+        private GameObject _loadingScreen;
+        private AudioClip _temporaryAudioClip;
 
-        private List<WeaponXMLProperties> _registeredWeaponProperties = new List<WeaponXMLProperties>();
-        private List<RegisteredWeaponModifications> _registeredWeaponModifications = new List<RegisteredWeaponModifications>();
+        private readonly List<WeaponXMLProperties> _registeredWeaponProperties = new List<WeaponXMLProperties>();
+        private readonly List<RegisteredWeaponModifications> _registeredWeaponModifications = new List<RegisteredWeaponModifications>();
 
-        public AudioClip[] whistleSounds { get { return _whistleSounds; } }
-        public AudioClip[] hurtSounds { get { return _hurtSounds; } }
-        public AudioClip captureJingleRu { get { return _captureJingleRU; } }
-        public AudioClip captureJingleGe { get { return _captureJingleGE; } }
-        public AudioClip captureJingleUs { get { return _captureJingleUS; } }
-        public AudioClip captureJingleCapturePointLost { get { return _captureJingleLost; } }
-        public AudioClip captureJingleCapturePointNeutralized { get { return _captureJingleNeutralized; } }
-        public Material[] projectileTracerMaterials { get; private set; }
+        public AudioClip[] WhistleAudioClips { get { return _whistleAudioClips; } }
+        public AudioClip[] HurtAudioClips { get { return _hurtAudioClips; } }
+        public AudioClip CaptureJingleSovietUnion { get { return _captureJingleSovietUnion; } }
+        public AudioClip CaptureJingleGermany { get { return _captureJingleGermany; } }
+        public AudioClip CaptureJingleUnitedStates { get { return _captureJingleUnitedStates; } }
+        public AudioClip CaptureJinglePointLost { get { return _captureJinglePointLost; } }
+        public AudioClip CaptureJinglePointNeutralized { get { return _captureJinglePointNeutralized; } }
 
-        public AssetBundle globalKillfeedAssetBundle { get; private set; }
-        public AssetBundle loadingScreenAssetBundle { get; private set; }
-        public AssetBundle killfeedAssetBundle { get; private set; }
-        public AssetBundle playerUIAssetBundle { get; private set; }
-        public AssetBundle projectileAssetBundle { get; private set; }
-        public AssetBundle weaponEditorManagerAssetBundle { get; private set; }
-        public Texture2D hitmarkerTexture { get; private set; }
-        public GameObject weaponEditorManager { get; private set; }
-        public GameObject globalKillfeedPrefab { get; private set; }
-        public GameObject globalKillfeedItemPrefab { get; private set; }
+        public Material[] ProjectileTracerMaterials { get; private set; }
+
+        public AssetBundle GlobalKillfeedAssetBundle { get; private set; }
+        public GameObject GlobalKillfeedPrefab { get; private set; }
+        public GameObject GlobalKillfeedItemPrefab { get; private set; }
+
+        public AssetBundle KillfeedAssetBundle { get; private set; }
+        public AssetBundle LoadingScreenAssetBundle { get; private set; }
+        public AssetBundle PlayerUIAssetBundle { get; private set; }
+        public AssetBundle ProjectileAssetBundle { get; private set; }
+        public AssetBundle WeaponEditorManagerAssetBundle { get; private set; }
+        public Texture2D HitmarkerTexture { get; private set; }
+        public GameObject WeaponEditorManager { get; private set; }
 
         private void Awake()
         {
-            Plugin.Log("ResourceManager: Awaking resource manager...");
+            Plugin.Log("ResourceManager: Awaking...");
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            LoadGlobalKillfeedAssetBundle();
-            LoadCaptureJingleSounds();
-            LoadKillfeedAssetBundle();
-            LoadPlayerUIAssetBundle();
-            LoadProjectilePrefab();
+            LoadBundleGlobalKillfeed();
+            LoadBundleKillfeed();
+            LoadBundlePlayerUI();
+            GetProjectilePrefab();
 
-            GetHitmarkerTexture();
-            GetWhistleSounds();
-            GetHurtSounds();
+            LoadCaptureJingles();
+            LoadHitmarkerTexture();
+            LoadWhistleSounds();
+            LoadHurtSounds();
 
-            GetWeaponMeshModifications();
-            AcquireWeaponModifications();
+            LoadWeaponMeshModifications();
+            LoadWeaponModifications();
             LoadWeaponPatches();
 
-            Plugin.Log("ResourceManager: Resoure manager awaken.");
+            Plugin.Log("ResourceManager: Awakened.");
         }
 
         private void Start()
         {
-            Plugin.Log("ResourceManager: Starting resource manager...");
+            Plugin.Log("ResourceManager: Starting...");
 
-            StartCoroutine(RegisterAllWeaponProperties());
+            Invoke(nameof(RegisterWeaponProperties), 1);
 
-            Plugin.Log("ResourceManager: Resource manager started.");
+            Plugin.Log("ResourceManager: Started.");
         }
 
-        private void GetWeaponMeshModifications()
+        private void LoadWeaponMeshModifications()
         {
-            string _path = Application.dataPath + GameConfiguration.defaultMeshModificationsPath;
-            string[] _files = Directory.GetFiles(_path);
+            Plugin.Log($"ResourceManager: Loading weapon mesh modifications...");
 
-            foreach(string _file in _files)
+            string _meshModificationsPath = Application.dataPath + GameConfiguration.defaultMeshModificationsPath;
+            string[] _meshModifications = Directory.GetFiles(_meshModificationsPath);
+
+            Plugin.Log($"ResourceManager: Found {_meshModifications.Length} mesh modification files:");
+
+            foreach (string _meshModificationFile in _meshModifications)
             {
-                string _content = File.ReadAllText(_file);
+                string _content = File.ReadAllText(_meshModificationFile);
 
                 XmlSerializer _serializer = new XmlSerializer(typeof(WeaponMeshModification));
                 StringReader _reader = new StringReader(_content);
                 WeaponMeshModification _meshModification = (WeaponMeshModification)_serializer.Deserialize(_reader);
 
+                Plugin.Log($"ResourceManager: * Mesh modification for weapon \"{_meshModification.weapon}\".");
+
                 WeaponMeshModificationRegistry.weaponMeshModifications.Add(_meshModification);
             }
         }
 
-        private void AcquireWeaponModifications()
+        private void LoadWeaponModifications()
         {
-            string _path = Application.dataPath + GameConfiguration.defaultWeaponModificationsPath;
+            Plugin.Log($"ResourceManager: Loading weapon modifications...");
 
-            string[] _foldersPath = new string[]
+            string _weaponModificationsPath = Application.dataPath + GameConfiguration.defaultWeaponModificationsPath;
+
+            string[] _weaponTypesFolders = new string[]
             {
-                _path + "us/",
-                _path + "ge/",
-                _path + "ru/",
-                _path + "neu/",
+                _weaponModificationsPath + "us/",
+                _weaponModificationsPath + "ge/",
+                _weaponModificationsPath + "ru/",
+                _weaponModificationsPath + "neu/",
             };
 
-            foreach (string _folder in _foldersPath)
+            foreach (string _weaponTypeFolder in _weaponTypesFolders)
             {
-                if (Directory.Exists(_folder) == false)
+                if (Directory.Exists(_weaponTypeFolder) == false)
                 {
-                    Directory.CreateDirectory(_folder);
+                    Plugin.LogWarning($"ResourceManager: Could not find folder \"{_weaponTypeFolder}\". Creating it instead...");
+                    Directory.CreateDirectory(_weaponTypeFolder);
                 }
 
-                Plugin.Log($"ResourceManager: Looking into folder \"{_folder}\"...");
+                Plugin.Log($"ResourceManager: Analyzing folder \"{_weaponTypeFolder}\".");
 
-                string[] _weaponFolders = Directory.GetDirectories(_folder);
+                string[] _weaponModificationsFolders = Directory.GetDirectories(_weaponTypeFolder);
 
-                foreach (string _weaponFolder in _weaponFolders)
+                Plugin.Log($"ResourceManager: Found {_weaponModificationsFolders.Length} weapon modifications folders.");
+
+                foreach (string _weaponModificationFolder in _weaponModificationsFolders)
                 {
-                    Plugin.Log($"ResourceManager: Looking into weapon folder \"{_weaponFolder}\"...");
-                    string[] _configurationFiles = Directory.GetFiles(_weaponFolder);
+                    Plugin.Log($"ResourceManager: Analyzing weapon modification folder \"{_weaponModificationFolder}\".");
+                    string[] _modificationFiles = Directory.GetFiles(_weaponModificationFolder);
 
-                    foreach (string _configurationFile in _configurationFiles)
+                    foreach (string _modificationFile in _modificationFiles)
                     {
-                        if (Path.GetExtension(_configurationFile).Contains("xml") == false)
+                        if (Path.GetExtension(_modificationFile).Contains("xml") == false)
                         {
                             continue;
                         }
 
-                        Plugin.Log($"ResourceManager: Looking for weapon modification XML file \"{_configurationFile}\"...");
-                        string _localPath = _configurationFile.Replace(".xml", "");
-                        string _profilePicturePath = _localPath + ".png";
+                        Plugin.Log($"ResourceManager: * Weapon modification XML file \"{_modificationFile}\".");
+                        string _fileLocalPath = _modificationFile.Replace(".xml", "");
+                        string _modificationProfilePicturePath = _fileLocalPath + ".png";
 
-                        if (File.Exists(_profilePicturePath) == false)
+                        if (File.Exists(_modificationProfilePicturePath) == false)
                         {
-                            Plugin.LogWarning($"ResourceManager: Could not load weapon modification (\"{_configurationFile}\") because there was no profile picture PNG file found!");
+                            Plugin.LogWarning($"ResourceManager: Could not load weapon modification file \"{_fileLocalPath}\"! Please place a \".png\" profile picture for this weapon modification of the same name as the \".xml\" file.");
                             continue;
                         }
 
-                        string _content = File.ReadAllText(_configurationFile);
+                        string _modificationFileContent = File.ReadAllText(_modificationFile);
                         XmlSerializer _serializer = new XmlSerializer(typeof(Modification));
-                        StringReader _reader = new StringReader(_content);
+                        StringReader _reader = new StringReader(_modificationFileContent);
                         Modification _modification = (Modification)_serializer.Deserialize(_reader);
-                        Plugin.Log($"ResourceManager: Serialized XML is null? {_modification == null}");
 
-                        byte[] _pictureBytes = File.ReadAllBytes(_profilePicturePath);
+                        byte[] _pictureBytes = File.ReadAllBytes(_modificationProfilePicturePath);
                         Texture2D _profilePicture = new Texture2D(2, 2);
                         _profilePicture.LoadImage(_pictureBytes);
                         _profilePicture.Apply();
@@ -159,48 +173,40 @@ namespace RiseOfWar
                         RegisteredWeaponModifications _registeredItem = new RegisteredWeaponModifications(_modification, _profilePicture);
                         _registeredWeaponModifications.Add(_registeredItem);
                     }
+
+                    Plugin.EndLogGroup();
                 }
+
+                Plugin.EndLogGroup();
             }
         }
 
-        public void LoadWeaponEditorManager()
-        {
-            if (weaponEditorManagerAssetBundle == null)
-            {
-                weaponEditorManagerAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "weapon_editor");
-            }
-
-            GameObject _weaponEditorManagerPrefab = weaponEditorManagerAssetBundle.LoadAsset("assets/weapon editor/prefabs/weapon editor.prefab") as GameObject;
-            weaponEditorManager = Instantiate(_weaponEditorManagerPrefab);
-            _weaponEditorManagerPrefab.AddComponent<WeaponEditorManager>().Awake();
-        }
-
-        private WeaponXMLProperties InterpretXMLFile(string _content)
+        private WeaponXMLProperties ReadWeaponPropertiesFile(string weaponPropertiesFileContent)
         {
             // Reads the XML of the file and stores it into the properties class.
             XmlSerializer _serializer = new XmlSerializer(typeof(WeaponXMLProperties));
-            StringReader _reader = new StringReader(_content);
+            StringReader _reader = new StringReader(weaponPropertiesFileContent);
             WeaponXMLProperties _properties = (WeaponXMLProperties)_serializer.Deserialize(_reader);
 
-            Plugin.Log("ResourceManager: Interpretted XML properties for weapon " + _properties.name);
+            Plugin.Log($"ResourceManager: Read XML properties for weapon \"{_properties.name}\".");
             return _properties;
         }
 
-        private IEnumerator UnpackWeaponPropertiesFile(string _path)
+        private void UnpackWeaponPropertiesFile(string path)
         {
-            Plugin.Log("ResourceManager: Unpacking file from path \"" + _path + "\".");
+            Plugin.Log($"ResourceManager: Unpacking weapon properties file from path \"{path}\"...");
 
-            string _dataFilePath = _path + "/data/weapon.xml";
-            WeaponXMLProperties _properties = InterpretXMLFile(File.ReadAllText(_dataFilePath));
-            WeaponRegistry.RegisterWeapon(_properties.name);
+            string _dataFilePath = path + "/data/weapon.xml";
+            string _dataFileContent = File.ReadAllText(_dataFilePath);
+            WeaponXMLProperties _weaponProperties = ReadWeaponPropertiesFile(_dataFileContent);
 
-            yield return null;
+            WeaponRegistry.RegisterWeapon(_weaponProperties.name);
 
-            string _soundsDirectory = _path + "/sounds";
+            string _soundsDirectory = path + "/sounds";
             string _fireSoundsDirectory = _soundsDirectory + "/fire";
             string _aimInSoundsDirectory = _soundsDirectory + "/aim in";
 
-            _properties.soundRegisters = new List<WeaponXMLProperties.SoundRegister>()
+            _weaponProperties.soundRegisters = new List<WeaponXMLProperties.SoundRegister>()
             {
                 new WeaponXMLProperties.SoundRegister()
                 {
@@ -212,46 +218,53 @@ namespace RiseOfWar
                 }
             };
 
-            _properties = HandleWeaponSounds(_properties, _fireSoundsDirectory, 0, _properties.GetInt(WeaponXMLProperties.BULLETS));
-            _properties = HandleWeaponSounds(_properties, _aimInSoundsDirectory, 1, 3);
-            _registeredWeaponProperties.Add(_properties);
+            int _wantedFireSoundsSamples = _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
+            int _wantedAimSoundsSamples = 2;
+
+            _weaponProperties = GetWeaponSounds(_weaponProperties, _fireSoundsDirectory, 0, _wantedFireSoundsSamples);
+            _weaponProperties = GetWeaponSounds(_weaponProperties, _aimInSoundsDirectory, 1, _wantedAimSoundsSamples);
+
+            _registeredWeaponProperties.Add(_weaponProperties);
+            Plugin.Log($"ResourceManager: Unpacked weapon properties file for weapon properties \"{_weaponProperties.name}\".");
         }
 
-        private WeaponXMLProperties HandleWeaponSounds(WeaponXMLProperties _base, string _soundPath, int _index, int _soundsCount)
+        private WeaponXMLProperties GetWeaponSounds(WeaponXMLProperties baseProperties, string soundsFolderPath, int soundRegisterIndex, int wantedSoundSamples)
         {
-            Plugin.Log($"ResourceManager: Handling weapon sounds for weapon \"{_base.name}\"");
+            Plugin.Log($"ResourceManager: Getting weapon sounds for weapon \"{baseProperties.name}\"...");
 
-            List<AudioClip> _clips = new List<AudioClip>();
-            string[] _filesInAudioDirectory = Directory.GetFiles(_soundPath);
+            List<AudioClip> _weaponSounds = new List<AudioClip>();
+            string[] _audioFiles = Directory.GetFiles(soundsFolderPath);
 
-            int _count = _filesInAudioDirectory.Length;
-            int _currentIndex = 0;
+            int _currentAudioFileIndex = 0;
 
-            for (int _i = 0; _i < _soundsCount; _i++)
+            for (int _i = 0; _i < wantedSoundSamples; _i++)
             {
-                _clips.Add(LoadAudioClip(_filesInAudioDirectory[_currentIndex]));
-                _currentIndex++;
+                AudioClip _weaponSound = LoadAudioClip(_audioFiles[_currentAudioFileIndex]);
+                _weaponSounds.Add(_weaponSound);
 
-                if (_currentIndex >= _count)
+                _currentAudioFileIndex++;
+                if (_currentAudioFileIndex >= _audioFiles.Length)
                 {
-                    _currentIndex = 0;
+                    _currentAudioFileIndex = 0;
                 }
             }
 
-            _base.soundRegisters[_index].clips = _clips;
-            return _base;
+            baseProperties.soundRegisters[soundRegisterIndex].clips = _weaponSounds;
+
+            Plugin.Log($"ResourceManager: Got weapon sounds for weapon \"{baseProperties.name}\".");
+            return baseProperties;
         }
 
-        private AudioClip LoadAudioClip(string _path)
+        public AudioClip LoadAudioClip(string path)
         {
-            StartCoroutine(LoadAudioClipInternal(_path));
-            return _tempAudioClip;
+            StartCoroutine(LoadAudioClipInternal(path));
+            return _temporaryAudioClip;
         }
 
-        private IEnumerator LoadAudioClipInternal(string _path)
+        private IEnumerator LoadAudioClipInternal(string path)
         {
-            Plugin.Log($"ResourceManager: Loading sound \"{Path.GetFileNameWithoutExtension(_path)}\"...");
-            WWW _audioWWW = new WWW(_path);
+            Plugin.Log($"ResourceManager: Loading sound \"{Path.GetFileNameWithoutExtension(path)}\"...");
+            WWW _audioWWW = new WWW(path);
 
             AudioClip _clip = _audioWWW.GetAudioClip(false, true);
 
@@ -259,34 +272,42 @@ namespace RiseOfWar
 
             if (_clip == null || _clip.length == 0)
             {
-                Plugin.LogError($"ResourceManager: Could not load sound \"{Path.GetFileNameWithoutExtension(_path)}\".");
+                Plugin.LogError($"ResourceManager: Could not load sound \"{Path.GetFileNameWithoutExtension(path)}\".");
                 yield break;
             }
 
-            _tempAudioClip = _clip;
-            Plugin.Log($"ResourceManager: Successfully loaded sound \"{Path.GetFileNameWithoutExtension(_path)}\".");
+            _temporaryAudioClip = _clip;
+            Plugin.Log($"ResourceManager: Successfully loaded sound \"{Path.GetFileNameWithoutExtension(path)}\".");
         }
 
-        private void GetHitmarkerTexture()
+        private void LoadHitmarkerTexture()
         {
-            Plugin.Log("ResourceManager: Loading hitmarker texture into memory...");
+            Plugin.Log("ResourceManager: Loading hitmarker texture...");
 
-            hitmarkerTexture = new Texture2D(2, 2);
-            hitmarkerTexture.LoadImage(File.ReadAllBytes(Application.dataPath + GameConfiguration.defaultImagesPath + "UI/hitmarker.png"));
-            hitmarkerTexture.Apply();
+            HitmarkerTexture = new Texture2D(2, 2);
 
-            if (hitmarkerTexture != null)
+            string _hitmarkerTexturePath = Application.dataPath + GameConfiguration.defaultImagesPath + "UI/hitmarker.png";
+            byte[] _hitmarkerTextureBytes = File.ReadAllBytes(_hitmarkerTexturePath);
+
+            HitmarkerTexture.LoadImage(_hitmarkerTextureBytes);
+            HitmarkerTexture.Apply();
+
+            if (HitmarkerTexture != null)
             {
-                Plugin.Log("ResourceManager: Successfully loaded hitmarker texture into memory.");
+                Plugin.Log("ResourceManager: Loaded hitmarker texture.");
+            }
+            else
+            {
+                Plugin.LogWarning("ResourceManager: Could not load hitmarker texture.");
             }
         }
 
-        private string[] RecursivelySearchForWeaponProperties(string _path)
+        private string[] RecursivelySearchForWeaponProperties(string path)
         {
             List<string> _weaponProperties = new List<string>();
-            _weaponProperties.AddRange(Directory.GetFiles(_path));
+            _weaponProperties.AddRange(Directory.GetFiles(path));
 
-            string[] _folders = Directory.GetDirectories(_path);
+            string[] _folders = Directory.GetDirectories(path);
 
             foreach (string _folder in _folders)
             {
@@ -302,29 +323,28 @@ namespace RiseOfWar
             string[] _musicThemePaths = Directory.GetFiles(_path);
             List<AudioClip> _themes = new List<AudioClip>();
 
-            foreach (string _music in _musicThemePaths)
+            foreach (string _musicThemeFile in _musicThemePaths)
             {
-                AudioClip _clip = LoadAudioClip(_music);
-
-                _themes.Add(_clip);
+                AudioClip _theme = LoadAudioClip(_musicThemeFile);
+                _themes.Add(_theme);
             }
 
-            _musicThemes = _themes.ToArray();
-            MainMenu.instance.music.clips = _musicThemes;
+            _musicThemesAudioClips = _themes.ToArray();
+            MainMenu.instance.music.clips = _musicThemesAudioClips;
         }
 
-        private void LoadProjectilePrefab()
+        private void GetProjectilePrefab()
         {
-            projectileAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "tracer");
-            _projectilePrefab = (GameObject)projectileAssetBundle.LoadAsset("assets/tracer/tracer.prefab");
+            ProjectileAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "tracer");
+            _projectilePrefab = (GameObject)ProjectileAssetBundle.LoadAsset("assets/tracer/tracer.prefab");
 
             List<Material> _materials = new List<Material>();
-            _materials.Add((Material)projectileAssetBundle.LoadAsset("assets/tracer/yellow tracer.mat"));
-            _materials.Add((Material)projectileAssetBundle.LoadAsset("assets/tracer/red tracer.mat"));
-            _materials.Add((Material)projectileAssetBundle.LoadAsset("assets/tracer/green tracer.mat"));
-            _materials.Add((Material)projectileAssetBundle.LoadAsset("assets/tracer/blue tracer.mat"));
+            _materials.Add((Material)ProjectileAssetBundle.LoadAsset("assets/tracer/yellow tracer.mat"));
+            _materials.Add((Material)ProjectileAssetBundle.LoadAsset("assets/tracer/red tracer.mat"));
+            _materials.Add((Material)ProjectileAssetBundle.LoadAsset("assets/tracer/green tracer.mat"));
+            _materials.Add((Material)ProjectileAssetBundle.LoadAsset("assets/tracer/blue tracer.mat"));
 
-            projectileTracerMaterials = _materials.ToArray();
+            ProjectileTracerMaterials = _materials.ToArray();
         }
 
         public void WriteChangesToFile(WeaponXMLProperties properties)
@@ -337,32 +357,32 @@ namespace RiseOfWar
             }
         }
 
-        public Weapon.Configuration GetConfigurationFromProperties(Weapon _weapon, WeaponXMLProperties _weaponProperties)
+        public Weapon.Configuration GetWeaponConfigurationFromProperties(Weapon weapon, WeaponXMLProperties weaponProperties)
         {
-            Plugin.Log($"ResourceManager: Getting weapon configuration from properties of \"{_weapon.name}\"...");
+            Plugin.Log($"ResourceManager: Getting weapon configuration from properties of \"{weapon.name}\"...");
 
-            if (_weapon == null)
+            if (weapon == null)
             {
                 Plugin.LogError("ResourceManager: Cannot get weapon configuration for null weapon.");
                 return null;
             }
 
-            if (_weaponProperties == null)
+            if (weaponProperties == null)
             {
-                Plugin.LogWarning("ResourceManager: Cannot get weapon configuration for weapon from null properties.");
-                return _weapon.configuration;
+                Plugin.LogWarning("ResourceManager: Cannot get weapon configuration for weapon from null weapon properties.");
+                return weapon.configuration;
             }
 
-            Weapon.Configuration _base = _weapon.configuration;
-            WeaponAdditionalData _additionalData = _weapon.GetAdditionalData();
-            Projectile _projectile = _base.projectile();
+            Weapon.Configuration _baseConfiguration = weapon.configuration;
+            WeaponAdditionalData _additionalData = weapon.GetAdditionalData();
+            Projectile _projectile = _baseConfiguration.projectile();
 
-            _base.kickback = 0;
-            _base.spread = 0;
-            _base.randomKick = 0;
-            _base.snapMagnitude = 0;
-            _base.followupMaxSpreadAim = 0;
-            _base.followupMaxSpreadHip = 0;
+            _baseConfiguration.kickback = 0;
+            _baseConfiguration.spread = 0;
+            _baseConfiguration.randomKick = 0;
+            _baseConfiguration.snapMagnitude = 0;
+            _baseConfiguration.followupMaxSpreadAim = 0;
+            _baseConfiguration.followupMaxSpreadHip = 0;
 
             if (_projectile.armorDamage != Vehicle.ArmorRating.AntiTank)
             {
@@ -370,27 +390,35 @@ namespace RiseOfWar
                 _projectile.armorDamage = Vehicle.ArmorRating.HeavyArms;
             }
 
-            if (_weaponProperties.damage.HasParam(WeaponXMLProperties.Damage.VEHICLE_DAMAGE))
+            if (weaponProperties.damage.HasParam(WeaponXMLProperties.Damage.VEHICLE_DAMAGE))
             {
-                _additionalData.damageToVehicles = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.VEHICLE_DAMAGE);
+                _additionalData.damageToVehicles = weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.VEHICLE_DAMAGE);
             }
             else
             {
                 _additionalData.damageToVehicles = _projectile.configuration.damageDropOff[0].value;
             }
 
-            _base.ammo = _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
-            _base.maxAmmoPerReload = _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
-            _base.spareAmmo = _weaponProperties.GetInt(WeaponXMLProperties.MAGAZINES) * _weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
-            _base.aimSensitivityMultiplier = 1;
-            _base.forceSniperAimSensitivity = false;
+            int _bulletsCount = weaponProperties.GetInt(WeaponXMLProperties.BULLETS);
+            int _reserveMagazinesCount = weaponProperties.GetInt(WeaponXMLProperties.MAGAZINES);
 
-            float _shortDamage = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DAMAGE);
-            float _shortDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DISTANCE);
-            float _longDamage = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DAMAGE);
-            float _longDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DISTANCE);
-            float _roundsPerMinute = _weaponProperties.GetFloat(WeaponXMLProperties.ROUNDS_PER_MINUTE);
-            float _velocity = _weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.VELOCITY);
+            _baseConfiguration.ammo = _bulletsCount;
+            _baseConfiguration.maxAmmoPerReload = _bulletsCount;
+            _baseConfiguration.spareAmmo = _reserveMagazinesCount * _bulletsCount;
+
+            _baseConfiguration.aimSensitivityMultiplier = 1;
+            _baseConfiguration.forceSniperAimSensitivity = false;
+
+            float _roundsPerMinute = weaponProperties.GetFloat(WeaponXMLProperties.ROUNDS_PER_MINUTE);
+            bool _isAdvancedReload = weaponProperties.HasParam(WeaponXMLProperties.IS_ADVANCED_RELOAD);
+            bool _useMaxAmmoPerReload = weaponProperties.HasParam(WeaponXMLProperties.USE_MAX_AMMO_PER_RELOAD);
+            bool _dropAmmoWhenReloading = weaponProperties.HasParam(WeaponXMLProperties.DROP_AMMO_WHEN_RELOADING);
+            float _shortDamage = weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DAMAGE);
+            float _shortDistance = weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DISTANCE);
+            float _longDamage = weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DAMAGE);
+            float _longDistance = weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DISTANCE);
+            float _velocity = weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.VELOCITY);
+            float _damageMultiplier = weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.DAMAGE_MULTIPLIER);
 
             if (_additionalData.modifications == null)
             {
@@ -398,8 +426,8 @@ namespace RiseOfWar
 
                 if (_additionalData.modifications == null)
                 {
-                    Plugin.LogError($"ResourceManager: Cannot get weapon configuration for weapon with null modifications ({_weapon.transform.name})!");
-                    return _weapon.configuration;
+                    Plugin.LogError($"ResourceManager: Cannot get weapon configuration for weapon with null modifications ({weapon.transform.name})!");
+                    return weapon.configuration;
                 }
             }
 
@@ -413,106 +441,92 @@ namespace RiseOfWar
                 _roundsPerMinute += _additionalData.modifications.GetModifiedValue(_roundsPerMinute, Modification.Modifications.ROUNDS_PER_MINUTE);
             }
 
-            _base.cooldown = 60f / _roundsPerMinute;
+            _baseConfiguration.cooldown = 60f / _roundsPerMinute;
 
             // _projectile.configuration.inheritVelocity = true;
             _projectile.configuration.gravityMultiplier = 1;
             _projectile.configuration.speed = _velocity;
 
-            _base.aimFov = GameConfiguration.defaultAimingFieldOfView;
-            ((AudioSource)Traverse.Create(_weapon).Field("audio").GetValue()).clip = null;
+            _baseConfiguration.aimFov = GameConfiguration.defaultAimingFieldOfView;
+            weapon.GetProperty<AudioSource>("audio").clip = null;
 
-            _projectile.configuration.damage = _weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.DAMAGE_MULTIPLIER);
+            _projectile.configuration.damage = _damageMultiplier;
             _projectile.configuration.dropoffEnd = _longDistance;
 
-            List<Keyframe> _keys = new List<Keyframe>()
+            List<Keyframe> _damageDropOffKeys = new List<Keyframe>()
             {
                 new Keyframe(0, _shortDamage),
-                new Keyframe(_base.projectile().configuration.dropoffEnd / _shortDistance,  _shortDamage),
+                new Keyframe(_longDistance / _shortDistance,  _shortDamage),
                 new Keyframe(1,  _longDamage),
             };
-            _projectile.configuration.damageDropOff = new AnimationCurve(_keys.ToArray());
 
-            _base.followupMaxSpreadAim = 0;
-            _base.followupMaxSpreadHip = 0;
+            _projectile.configuration.damageDropOff = new AnimationCurve(_damageDropOffKeys.ToArray());
 
-            if (_weaponProperties.HasParam(WeaponXMLProperties.IS_ADVANCED_RELOAD))
-            {
-                _base.advancedReload = _weaponProperties.GetBool(WeaponXMLProperties.IS_ADVANCED_RELOAD);
-            }
+            if (_isAdvancedReload)
+                _baseConfiguration.advancedReload = weaponProperties.GetBool(WeaponXMLProperties.IS_ADVANCED_RELOAD);
 
-            if (_weaponProperties.HasParam(WeaponXMLProperties.USE_MAX_AMMO_PER_RELOAD))
-            {
-                _base.useMaxAmmoPerReload = _weaponProperties.GetBool(WeaponXMLProperties.USE_MAX_AMMO_PER_RELOAD);
-            }
-            if (_weaponProperties.HasParam(WeaponXMLProperties.DROP_AMMO_WHEN_RELOADING))
-            {
-                _base.dropAmmoWhenReloading = _weaponProperties.GetBool(WeaponXMLProperties.DROP_AMMO_WHEN_RELOADING);
-            }
+            if (_useMaxAmmoPerReload)
+                _baseConfiguration.useMaxAmmoPerReload = weaponProperties.GetBool(WeaponXMLProperties.USE_MAX_AMMO_PER_RELOAD);
 
-            _base.projectilePrefab = _projectile.gameObject;
+            if (_dropAmmoWhenReloading)
+                _baseConfiguration.dropAmmoWhenReloading = weaponProperties.GetBool(WeaponXMLProperties.DROP_AMMO_WHEN_RELOADING);
 
-            return _base;
+            _baseConfiguration.projectilePrefab = _projectile.gameObject;
+
+            return _baseConfiguration;
         }
 
-        public Weapon.Configuration GetGlobalConfigurationForBots(Weapon _weapon, WeaponXMLProperties _weaponProperties)
+        public Weapon.Configuration GetWeaponConfigurationForBots(Weapon weapon, WeaponXMLProperties weaponProperties)
         {
-            if (_weapon == null || _weapon.configuration == null)
+            if (weapon == null || weapon.configuration == null)
             {
-                return _weapon.configuration;
+                return weapon.configuration;
             }
 
-            Weapon.Configuration _base = _weapon.configuration;
-            //_base.projectilePrefab = _projectilePrefab;
-            //_base.projectilePrefab = CopyProjectileConfiguration(_base.projectile(), _projectilePrefab.GetComponent<Projectile>()).gameObject;
-
+            Weapon.Configuration _base = weapon.configuration;
             Projectile _projectile = _base.projectile();
-            float _shortDamage = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DAMAGE);
-            float _shortDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DISTANCE);
-            float _longDamage = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DAMAGE);
-            float _longDistance = _weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DISTANCE);
 
-            _projectile.configuration.damage = _weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.DAMAGE_MULTIPLIER);
+            float _shortDamage = weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DAMAGE);
+            float _shortDistance = weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.SHORT_DISTANCE);
+            float _longDamage = weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DAMAGE);
+            float _longDistance = weaponProperties.damage.GetFloat(WeaponXMLProperties.Damage.LONG_DISTANCE);
+
+            _projectile.configuration.damage = weaponProperties.projectile.GetFloat(WeaponXMLProperties.Projectile.DAMAGE_MULTIPLIER);
             _projectile.configuration.dropoffEnd = _longDistance;
 
-            List<Keyframe> _keys = new List<Keyframe>()
+            List<Keyframe> _damageDropOffKeys = new List<Keyframe>()
             {
                 new Keyframe(0, _shortDamage),
-                new Keyframe(_base.projectile().configuration.dropoffEnd / _shortDistance,  _shortDamage),
+                new Keyframe(_longDistance / _shortDistance,  _shortDamage),
                 new Keyframe(1,  _longDamage),
             };
 
-            _projectile.configuration.damageDropOff = new AnimationCurve(_keys.ToArray());
+            _projectile.configuration.damageDropOff = new AnimationCurve(_damageDropOffKeys.ToArray());
             _base.projectilePrefab = _projectile.gameObject;
 
             return _base;
-        }
-
-        private void CopyProjectileConfiguration(Projectile from, Projectile to)
-        {
-            to.configuration.makesFlybySound = from.configuration.makesFlybySound;
-            to.configuration.flybyPitch = from.configuration.flybyPitch;
-            to.configuration.impactDecalSize = from.configuration.impactDecalSize;
-            to.configuration.passThroughPenetrateLayer = from.configuration.passThroughPenetrateLayer;
-            to.configuration.piercing = from.configuration.piercing;
         }
 
         public List<RegisteredWeaponModifications> GetPossibleWeaponModifications(string weaponName)
         {
             List<RegisteredWeaponModifications> _output = new List<RegisteredWeaponModifications>();
 
-            Debug.Log("There is no registered modifications right :(? " + (_registeredWeaponModifications.Count <= 0 ? "yeeaaaah ;-;" : "naah there is, it's fine :)"));
+            Plugin.EndLogGroup();
+
+            Plugin.Log($"ResourceManager: Searching for possible weapon modifications for weapon \"{weaponName}\"...");
+            Plugin.Log($"ResourceManager: Found {_registeredWeaponModifications.Count} possible weapon modifications:");
 
             foreach (RegisteredWeaponModifications _modification in _registeredWeaponModifications)
             {
-                Debug.Log("weapon name = " + weaponName);
-                Debug.Log("modification applies to = " + _modification.modification.weaponName);
+                Plugin.Log($"ResourceManager: * Modification \"{_modification.modification.name}\" applies to = \"{_modification.modification.weaponName}\".");
 
                 if (_modification.modification.weaponName == weaponName)
                 {
                     _output.Add(_modification);
                 }
             }
+
+            Plugin.EndLogGroup();
 
             return _output;
         }
@@ -527,17 +541,19 @@ namespace RiseOfWar
             _loadingScreen.SetActive(false);
         }
 
-        public void LoadCaptureJingleSounds()
+        public void LoadCaptureJingles()
         {
             Plugin.Log("ResourceManager: Loading capture jingles...");
 
-            _captureJingleGE = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_ge.wav");
-            _captureJingleUS = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_us.wav");
-            _captureJingleRU = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_ru.wav");
-            _captureJingleLost = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_point_lost.wav");
-            _captureJingleNeutralized = LoadAudioClip(Application.dataPath + GameConfiguration.defaultCaptureJinglesPath + "capture_jingle_neutralized.wav");
+            string _basePath = Application.dataPath + GameConfiguration.defaultCaptureJinglesPath;
 
-            transform.gameObject.AddComponent<MusicJingleManager>();
+            _captureJingleGermany = LoadAudioClip(_basePath + "capture_jingle_ge.wav");
+            _captureJingleUnitedStates = LoadAudioClip(_basePath + "capture_jingle_us.wav");
+            _captureJingleSovietUnion = LoadAudioClip(_basePath + "capture_jingle_ru.wav");
+            _captureJinglePointLost = LoadAudioClip(_basePath + "capture_jingle_point_lost.wav");
+            _captureJinglePointNeutralized = LoadAudioClip(_basePath + "capture_jingle_neutralized.wav");
+            gameObject.AddComponent<MusicJingleManager>();
+
             Plugin.Log("ResourceManager: Loaded capture jingles.");
         }
 
@@ -545,21 +561,28 @@ namespace RiseOfWar
         {
             Plugin.Log("ResourceManager: Loading loading screen asset bundle...");
 
-            loadingScreenAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "loading_screen");
-            _loadingScreen = Instantiate((GameObject)loadingScreenAssetBundle.LoadAsset("assets/loading mods menu/loading mods menu.prefab"), Instance.transform);
+            string _loadingScreenPath = Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "loading_screen";
+            LoadingScreenAssetBundle = AssetBundle.LoadFromFile(_loadingScreenPath);
+
+            string _loadingScreenPrefabPath = "assets/loading mods menu/loading mods menu.prefab";
+            GameObject _loadingScreenPrefab = (GameObject)LoadingScreenAssetBundle.LoadAsset(_loadingScreenPrefabPath);
+
+            _loadingScreen = Instantiate(_loadingScreenPrefab, Instance.transform);
             _loadingScreen.transform.name = "Loading Screen";
+
             DisableLoadingScreen();
 
             Plugin.Log("ResourceManager: Loaded loading screen asset bundle.");
         }
 
-        public void LoadGlobalKillfeedAssetBundle()
+        public void LoadBundleGlobalKillfeed()
         {
             Plugin.Log("ResourceManager: Loading global killfeed asset bundle...");
 
-            globalKillfeedAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "global_killfeed");
+            string _globalKillfeedPath = Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "global_killfeed";
+            GlobalKillfeedAssetBundle = AssetBundle.LoadFromFile(_globalKillfeedPath);
 
-            if (globalKillfeedAssetBundle == null)
+            if (GlobalKillfeedAssetBundle == null)
             {
                 Plugin.LogError("ResourceManager: Could not load global killfeed asset bundle!");
                 return;
@@ -567,8 +590,8 @@ namespace RiseOfWar
 
             try
             {
-                globalKillfeedItemPrefab = globalKillfeedAssetBundle.LoadAsset("assets/global killfeed/prefabs/global killfeed item.prefab") as GameObject;
-                globalKillfeedPrefab = globalKillfeedAssetBundle.LoadAsset("assets/global killfeed/prefabs/global killfeed.prefab") as GameObject;
+                GlobalKillfeedItemPrefab = (GameObject)GlobalKillfeedAssetBundle.LoadAsset("assets/global killfeed/prefabs/global killfeed item.prefab");
+                GlobalKillfeedPrefab = (GameObject)GlobalKillfeedAssetBundle.LoadAsset("assets/global killfeed/prefabs/global killfeed.prefab");
             }
             catch (Exception _exception)
             {
@@ -579,74 +602,74 @@ namespace RiseOfWar
             Plugin.Log("ResourceManager: Loaded global killfeed asset bundle.");
         }
 
-        public void LoadKillfeedAssetBundle()
+        public void LoadBundleKillfeed()
         {
             Plugin.Log("ResourceManager: Loading killfeed asset bundle...");
 
-            killfeedAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "killfeed_ui");
+            string _killfeedPath = Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "killfeed_ui";
+            KillfeedAssetBundle = AssetBundle.LoadFromFile(_killfeedPath);
 
             Plugin.Log("ResourceManager: Loaded killfeed asset bundle.");
         }
 
-        public void LoadPlayerUIAssetBundle()
+        public void LoadBundlePlayerUI()
         {
             Plugin.Log("ResourceManager: Loading player asset bundle...");
 
-            playerUIAssetBundle = AssetBundle.LoadFromFile(Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "player_ui");
+            string _playerUIPath = Application.dataPath + GameConfiguration.defaultAssetBundlesPath + "player_ui";
+            PlayerUIAssetBundle = AssetBundle.LoadFromFile(_playerUIPath);
 
             Plugin.Log("ResourceManager: Loaded player asset bundle.");
         }
 
-        private IEnumerator RegisterAllWeaponProperties()
+        private void RegisterWeaponProperties()
         {
-            yield return new WaitForSeconds(1);
-
-            Plugin.Log("ResourceManager: Registering all weapon properties...");
+            Plugin.Log("ResourceManager: Registering weapon properties...");
 
             string _basePath = Application.dataPath + GameConfiguration.defaultWeaponDataPath;
 
-            string[] _directoriesGE = Directory.GetDirectories(_basePath + "ge/");
-            string[] _directoriesUS = Directory.GetDirectories(_basePath + "us/");
-            string[] _directoriesRU = Directory.GetDirectories(_basePath + "ru/");
-            string[] _directoriesNEU = Directory.GetDirectories(_basePath + "neu/");
-
-            foreach (string _dir in _directoriesGE)
+            List<string[]> _weaponPropertiesDirectories = new List<string[]>()
             {
-                StartCoroutine(UnpackWeaponPropertiesFile(_dir));
-            }
+                Directory.GetDirectories(_basePath + "ge/"),
+                Directory.GetDirectories(_basePath + "us/"),
+                Directory.GetDirectories(_basePath + "ru/"),
+                Directory.GetDirectories(_basePath + "neu/"),
+            };
 
-            foreach (string _dir in _directoriesUS)
+            foreach(string[] _weaponPropertiesDirectory in _weaponPropertiesDirectories)
             {
-                StartCoroutine(UnpackWeaponPropertiesFile(_dir));
-            }
-
-            foreach (string _dir in _directoriesRU)
-            {
-                StartCoroutine(UnpackWeaponPropertiesFile(_dir));
-            }
-
-            foreach (string _dir in _directoriesNEU)
-            {
-                StartCoroutine(UnpackWeaponPropertiesFile(_dir));
+                foreach(string _weaponDirectory in _weaponPropertiesDirectory)
+                {
+                    UnpackWeaponPropertiesFile(_weaponDirectory);
+                }
             }
         }
 
         private void LoadWeaponPatches()
         {
-            string _path = Application.dataPath + GameConfiguration.defaultPatchesPath + "Weapons/";
-            string[] _files = Directory.GetFiles(_path);
+            string _basePath = Application.dataPath + GameConfiguration.defaultPatchesPath + "Weapons/";
+            string[] _weaponPatchFiles = Directory.GetFiles(_basePath);
 
-            foreach (string _file in _files)
+            foreach (string _weaponPatchFile in _weaponPatchFiles)
             {
-                string _content = File.ReadAllText(_file);
+                string _weaponPatchFileContent = File.ReadAllText(_weaponPatchFile);
+                
                 XmlSerializer _serializer = new XmlSerializer(typeof(Patch));
-                StringReader _reader = new StringReader(_content);
-                Patch _patch = (Patch)_serializer.Deserialize(_reader);
+                StringReader _reader = new StringReader(_weaponPatchFileContent);
+                Patch _weaponPatch = (Patch)_serializer.Deserialize(_reader);
+             
+                InterpretWeaponPatch(_weaponPatch);
+            }
+        }
 
-                if (_patch.type == "name")
-                {
-                    WeaponRegistry.RegisterNewRealName(_patch.GetString(Patch.PATCH_NAME_DEFAULT_NAME), _patch.GetString(Patch.PATCH_NAME_PATCHED_NAME));
-                }
+        private void InterpretWeaponPatch(Patch weaponPatch)
+        {
+            if (weaponPatch.type == "name")
+            {
+                string _defaultName = weaponPatch.GetString(Patch.PATCH_NAME_DEFAULT_NAME);
+                string _patchedName = weaponPatch.GetString(Patch.PATCH_NAME_PATCHED_NAME);
+
+                WeaponRegistry.RegisterNewRealName(_defaultName, _patchedName);
             }
         }
 
@@ -658,7 +681,7 @@ namespace RiseOfWar
                 return null;
             }
 
-            foreach (WeaponXMLProperties _properties in Instance._registeredWeaponProperties)
+            foreach (WeaponXMLProperties _properties in ResourceManager.Instance._registeredWeaponProperties)
             {
                 if (_properties.name.Equals(_weapon.name))
                 {
@@ -666,46 +689,45 @@ namespace RiseOfWar
                 }
             }
 
-            // Plugin.LogError($"ResourceManager: Could not find weapon properties for weapon \"{_weapon.name}\"!");
             return null;
         }
 
-        private void GetWhistleSounds()
+        private void LoadWhistleSounds()
         {
-            string _path = Application.dataPath + GameConfiguration.defaultWhistlePath;
-            string[] _files = Directory.GetFiles(_path);
-            List<AudioClip> _clips = new List<AudioClip>();
+            string _basePath = Application.dataPath + GameConfiguration.defaultWhistlePath;
+            string[] _whistleSoundFiles = Directory.GetFiles(_basePath);
+            List<AudioClip> _whistleSounds = new List<AudioClip>();
 
-            foreach (string _file in _files)
+            foreach (string _whistleSoundFile in _whistleSoundFiles)
             {
-                if (Path.GetExtension(_file).Contains("wav") == false)
+                if (Path.GetExtension(_whistleSoundFile).Contains("wav") == false)
                 {
                     continue;
                 }
 
-                _clips.Add(LoadAudioClip(_file));
+                _whistleSounds.Add(LoadAudioClip(_whistleSoundFile));
             }
 
-            _whistleSounds = _clips.ToArray();
+            _whistleAudioClips = _whistleSounds.ToArray();
         }
 
-        private void GetHurtSounds()
+        private void LoadHurtSounds()
         {
-            string _path = Application.dataPath + GameConfiguration.defaultHurtPath;
-            string[] _files = Directory.GetFiles(_path);
-            List<AudioClip> _clips = new List<AudioClip>();
+            string _basePath = Application.dataPath + GameConfiguration.defaultHurtPath;
+            string[] _hurtSoundFiles = Directory.GetFiles(_basePath);
+            List<AudioClip> _hurtSounds = new List<AudioClip>();
 
-            foreach (string _file in _files)
+            foreach (string _hurtSoundFile in _hurtSoundFiles)
             {
-                if (Path.GetExtension(_file).Contains("wav") == false)
+                if (Path.GetExtension(_hurtSoundFile).Contains("wav") == false)
                 {
                     continue;
                 }
 
-                _clips.Add(LoadAudioClip(_file));
+                _hurtSounds.Add(LoadAudioClip(_hurtSoundFile));
             }
 
-            _hurtSounds = _clips.ToArray();
+            _hurtAudioClips = _hurtSounds.ToArray();
         }
     }
 }

@@ -11,6 +11,13 @@ namespace RiseOfWar
     {
         private static Dictionary<Actor, bool> _hasDroppedWeapon = new Dictionary<Actor, bool>();
 
+        [HarmonyPatch(typeof(Actor), "Awake")]
+        [HarmonyPostfix]
+        private static void Awake(Actor __instance)
+        {
+            __instance.AddData(new ActorAdditionalData(__instance));
+        }
+
         [HarmonyPatch(typeof(Actor), "Update")]
         [HarmonyPostfix]
         private static void Update(Actor __instance)
@@ -22,6 +29,8 @@ namespace RiseOfWar
 
             __instance.scoreboardEntry.flagCaptures = __instance.GetAdditionalData().score;
             __instance.scoreboardEntry.fText.text = __instance.scoreboardEntry.flagCaptures.ToString();
+
+            __instance.UpdateInsideFlag();
         }
 
         [HarmonyPatch(typeof(Actor), "SpawnAt")]
@@ -57,7 +66,7 @@ namespace RiseOfWar
         [HarmonyPrefix]
         static bool DiePatch(Actor __instance, DamageInfo info, bool isSilentKill)
         {
-            Plugin.Log($"ActorPatcher: Killing actor \"{__instance.name}\"...");
+            Plugin.Log($"ActorPatcher: Actor \"{__instance.name}\" died.");
             ActorAdditionalData _actorAdditional = __instance.GetAdditionalData();
 
             EventManager.onActorDie.Invoke(new OnActorDieEvent(info, __instance, isSilentKill));
@@ -89,7 +98,7 @@ namespace RiseOfWar
                 return;
             }
 
-            Plugin.Log("ActorPatcher: Weapon drop has been called.");
+            Plugin.Log($"ActorPatcher: Initializing weapon drop for weapon \"{_weapon.name}\" of actor \"{_actor.name}\"...");
 
             GameObject _weaponPlaceholder = GameObject.Instantiate(_weapon.transform).gameObject;
 
@@ -138,11 +147,22 @@ namespace RiseOfWar
                 return false;
             }
 
-            Plugin.Log($"ActorPatcher: Trying to deal damage to actor \"{__instance.name}\". Source = \"{info.sourceActor.name}\"");
+            Plugin.EndLogGroup();
+
+            Plugin.Log($"ActorPatcher: Dealing damage to actor \"{__instance.name}\"...");
+
+            if (info.sourceActor != null)
+            {
+                Plugin.Log($"ActorPatcher: Damage of type \"{info.type}\" from source (Actor) \"{info.sourceActor.name}\".");
+            }
+            else
+            {
+                Plugin.Log($"ActorPatcher: Damage of type \"{info.type}\".");
+            }
 
             if (__instance.dead)
             {
-                Plugin.Log("ActorPatcher: Cannot deal damage to dead actors!");
+                Plugin.LogWarning("ActorPatcher: Cannot deal damage to dead actors.");
                 Plugin.EndLogGroup();
 
                 return false;
@@ -150,7 +170,7 @@ namespace RiseOfWar
 
             if (__instance.seat != null && __instance.seat.enclosed && !__instance.seat.vehicle.burning)
             {
-                Plugin.Log("ActorPatcher: Cannot directly deal damage to actors inside vehicles!");
+                Plugin.LogWarning("ActorPatcher: Cannot deal damage to actors inside enclosed vehicles.");
                 Plugin.EndLogGroup();
 
                 return false;
@@ -165,7 +185,7 @@ namespace RiseOfWar
 
                 if (_additionalData == null)
                 {
-                    Plugin.LogWarning($"ActorPatcher: Something went wrong with actor's additional data being null (actor = {__instance.name})! Cannot deal damage.");
+                    Plugin.LogWarning($"ActorPatcher: Actor additional data is null! Could not proceed for actor \"{__instance.name}\".");
                     Plugin.EndLogGroup();
 
                     return false;
@@ -174,7 +194,25 @@ namespace RiseOfWar
 
             if (_additionalData.CanGetDamaged() == false)
             {
-                Plugin.Log($"ActorPatcher: Could not damage actor because it has been damaged too recently (less than 0.05 seconds ago).");
+                Plugin.LogWarning($"ActorPatcher: Cannot damage actors more than every {GameConfiguration.actorDamageInvulnerabilityTime} seconds.");
+                Plugin.EndLogGroup();
+
+                return false;
+            }
+
+            if (__instance.isInvulnerable)
+            {
+                Plugin.LogWarning("ActorPatcher: Cannot deal damage to invulnerable actors.");
+                Plugin.EndLogGroup();
+
+                return false;
+            }
+
+            __instance.onTakeDamage.Invoke(__instance, info.sourceActor, info);
+
+            if (__instance.onTakeDamage.isConsumed)
+            {
+                Plugin.LogWarning("ActorPatcher: On take damage event was consumed and thus damage could not be applied.");
                 Plugin.EndLogGroup();
 
                 return false;
@@ -185,29 +223,13 @@ namespace RiseOfWar
                 _additionalData.lastTimeHit = Time.time;
             }
 
-            if (__instance == ActorManager.instance.player)
+            if (__instance == ActorManager.instance.player && info.healthDamage > 0.1f)
             {
-                SoundManager.instance.ForcePlaySound(ResourceManager.Instance.hurtSounds[Random.Range(0, ResourceManager.Instance.hurtSounds.Length)]);
+                SoundManager.instance.ForcePlaySound(ResourceManager.Instance.HurtAudioClips[Random.Range(0, ResourceManager.Instance.HurtAudioClips.Length)]);
             }
 
-            if (__instance.isInvulnerable)
-            {
-                Plugin.Log("ActorPatcher: Cannot deal damage to invulnerable actors!");
-                Plugin.EndLogGroup();
-
-                return false;
-            }
-
-            Plugin.Log("ActorPatcher: An actor took damage. Damage took = " + info.healthDamage + "; Point where projectile landed = " + info.point);
-
-            __instance.onTakeDamage.Invoke(__instance, info.sourceActor, info);
-            if (__instance.onTakeDamage.isConsumed)
-            {
-                Plugin.Log("ActorPatcher: On take damage event was consumed and thus damage could not be applied.");
-                Plugin.EndLogGroup();
-
-                return false;
-            }
+            Plugin.Log($"ActorPatcher: Dealt {info.healthDamage} damage to actor \"{__instance.name}\".");
+            Plugin.Log($"ActorPatcher: Projectile landed at position ({info.point.x}; {info.point.y}; {info.point.z}).");
 
             IngameUi.OnDamageDealt(info, new HitInfo(__instance));
 
@@ -215,11 +237,12 @@ namespace RiseOfWar
             float _healthBeforeDamage = __instance.health;
             __instance.health -= info.healthDamage;
 
-            Plugin.Log($"ActorPatcher: Actor's health before damage = {_healthBeforeDamage}; Actor's current health = {__instance.health}");
+            Plugin.Log($"ActorPatcher: Health amount before damage was dealt = {_healthBeforeDamage}.");
+            Plugin.Log($"ActorPatcher: Current health = {__instance.health}.");
 
             if (__instance.health <= 0f)
             {
-                Plugin.Log($"ActorPatcher: Actor's health is below 0 ({__instance.health}) and show now be killed.");
+                Plugin.Log($"ActorPatcher: Current health is below 0 ({__instance.health}).");
 
                 // Making sure to kill actors that *should* die.
                 // Trying to use the private method Die instead of Kill to see if it

@@ -30,7 +30,7 @@ namespace RiseOfWar
             }
 
             MeshRenderer _renderer = _projectileGraphics.GetComponent<MeshRenderer>();
-            Material _material = ResourceManager.Instance.projectileTracerMaterials[_projectile.source.team + 1];
+            Material _material = ResourceManager.Instance.ProjectileTracerMaterials[_projectile.source.team + 1];
             _renderer.material = _material;
 
             _tailScale = Random.Range(25f, 100f);

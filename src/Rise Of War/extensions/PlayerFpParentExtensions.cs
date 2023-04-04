@@ -36,7 +36,7 @@ namespace RiseOfWar
 
         public static void AddCameraRecoil(this PlayerFpParent _playerFpParent, float _upward, float _rightward, float _variance)
         {
-            Plugin.Log("PlayerFpParentExtensions: Received recoil -> righward = " + _rightward + "; upward = " + _upward + "; variance = " + _variance + ";");
+            Plugin.Log($"PlayerFpParentExtensions: Received recoil. Righward {_rightward}; Upward {_upward}; Recoil variance {_variance}.");
 
             if (_playerFpParent.GetAdditionalData().recoilAnchor == null)
             {

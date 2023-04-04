@@ -18,6 +18,7 @@ namespace RiseOfWar
         static void AwakePatch(FpsActorController __instance)
         {
             __instance.gameObject.AddComponent<PlayerInteractions>();
+            ReferenceManager.player = __instance.actor;
         }
 
         [HarmonyPatch(typeof(FpsActorController), "SpawnAt")]
@@ -60,7 +61,7 @@ namespace RiseOfWar
                 }
             }
 
-            if (__instance.actor == null)
+            if (ReferenceManager.player == null)
             {
                 Plugin.LogError("FpsActorControllerPatcher: Cannot manage stamina for null actor!");
                 return;
@@ -115,7 +116,7 @@ namespace RiseOfWar
                 }
             }
 
-            PlayerUI.instance.SetHealthAmount(__instance.actor.health);
+            PlayerUI.instance.SetHealthAmount(ReferenceManager.player.health);
 
             UpdateSeatCamera(__instance);
 

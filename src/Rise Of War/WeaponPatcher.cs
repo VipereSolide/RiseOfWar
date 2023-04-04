@@ -1,12 +1,12 @@
-﻿using HarmonyLib;
-using System;
-using UnityEngine;
+﻿using System;
+
 using Random = UnityEngine.Random;
+using UnityEngine;
+using HarmonyLib;
 
 namespace RiseOfWar
 {
     using WeaponMeshModificator;
-    using Events;
 
     public class WeaponPatcher
     {
@@ -31,7 +31,7 @@ namespace RiseOfWar
             // Setting the tuck (is the equivalent of sprinting inside the weapon class) parameter of that weapon
             // to a random string (__null__ here) so we don't have the tuck animation playing. This is so we can
             // implement our own procedural running animation later on.
-            Traverse.Create(typeof(Weapon)).Field("TUCK_PARAMETER_HASH").SetValue(Animator.StringToHash("__null__"));
+            __instance.SetProperty("TUCK_PARAMETER_HASH", Animator.StringToHash("__null__"));
         }
 
         [HarmonyPatch(typeof(Weapon), "Start")]
@@ -52,14 +52,16 @@ namespace RiseOfWar
 
             if (__instance.UserIsAI())
             {
-                __instance.configuration = ResourceManager.Instance.GetGlobalConfigurationForBots(__instance, __instance.weaponProperties());
+                __instance.configuration = ResourceManager.Instance.GetWeaponConfigurationForBots(__instance, __instance.weaponProperties());
                 return;
             }
+
+            // __instance.AddWeaponAnimationSetup();
 
             CreateAimingAnchor(__instance);
             CreateRecoilAnchor(__instance);
 
-            __instance.configuration = ResourceManager.Instance.GetConfigurationFromProperties(__instance, __instance.weaponProperties());
+            __instance.configuration = ResourceManager.Instance.GetWeaponConfigurationFromProperties(__instance, __instance.weaponProperties());
             __instance.ResetSetup();
 
             WeaponAdditionalData _additionalData = __instance.GetAdditionalData();
@@ -102,11 +104,12 @@ namespace RiseOfWar
             }
         }
 
+
         [HarmonyPatch(typeof(Weapon), "LateUpdate")]
         [HarmonyPrefix]
         private static bool LateUpdatePatch(Weapon __instance)
         {
-            if (__instance != FpsActorController.instance.actor.activeWeapon)
+            if (__instance != ReferenceManager.player.activeWeapon)
             {
                 return false;
             }
@@ -457,6 +460,12 @@ namespace RiseOfWar
                 Plugin.Log("WeaponPatcher: Received conefire expansion data (aimed) = " + _coneExpansion);
             }
 
+            __instance.PlayAnimation(WeaponAnimationType.Fire, true);
+
+            // Animation _animation = __instance.GetAdditionalData().animation;
+            // Plugin.Log($"WeaponPatcher: Playing fire animation named \"{__instance.GetAdditionalData().fireAnimationName}\"");
+            // Plugin.Log($"WeaponPatcher: Is animation legacy = {_animation.clip.legacy}");
+
             return false;
         }
 
@@ -464,7 +473,26 @@ namespace RiseOfWar
         [HarmonyPostfix]
         private static void ReloadPatch(Weapon __instance)
         {
+            __instance.PlayAnimation(WeaponAnimationType.Reload, true);
             PlayerUI.instance.SetWeaponCustomDisplayName("RELOADING");
+        }
+
+        [HarmonyPatch(typeof(Weapon), "ReloadDone")]
+        [HarmonyPostfix]
+        private static void ReloadDonePatch(Weapon __instance)
+        {
+            __instance.PlayAnimation(WeaponAnimationType.Idle, true);
+        }
+
+        [HarmonyPatch(typeof(Weapon), "Unholster")]
+        [HarmonyPostfix]
+        private static void UnholsterPatch(Weapon __instance)
+        {
+            try
+            {
+            __instance.PlayAnimation(WeaponAnimationType.Draw, true);
+            }
+            catch { }
         }
 
         [HarmonyPatch(typeof(Weapon), "ApplyRecoil")]

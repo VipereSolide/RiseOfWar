@@ -1,7 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using TMPro;
+﻿using System.Collections.Generic;
+using System.Text;
+using System;
+
 using UnityEngine;
+using TMPro;
 
 namespace RiseOfWar
 {
@@ -24,20 +26,6 @@ namespace RiseOfWar
             }
         }
 
-        public static KillfeedManager Instance { get; set; }
-
-        [SerializeField]
-        private GameObject _killfeedItemPrefab;
-
-        [SerializeField]
-        private Transform _feedItemsContainer;
-
-        private List<CanvasGroup> _feedItems = new List<CanvasGroup>();
-        private List<CanvasGroup> _toDestroy = new List<CanvasGroup>();
-
-        private List<KillfeedItem> _killfeedItems = new List<KillfeedItem>();
-        public KillfeedItem[] killfeedItems { get { return _killfeedItems.ToArray(); } }
-
         public static readonly string CAPTURED_POINT_MESSAGE = $"Captured <#{GameConfiguration.WHITE_COLOR}>67 XP</color>";
         public static readonly int CAPTURED_POINT_XP_AMOUNT = 67;
 
@@ -50,17 +38,50 @@ namespace RiseOfWar
         public static readonly string DEFEND_POINT_MESSAGE = $"Defend <#{GameConfiguration.WHITE_COLOR}>65 XP</color>";
         public static readonly int DEFEND_POINT_XP_AMOUNT = 65;
 
-        private List<Actor> _deadActors = new List<Actor>();
-        private List<Vehicle> _deadVehicles = new List<Vehicle>();
-        private List<Actor> _woundedActors = new List<Actor>();
-        private Dictionary<Actor, float> _lastHitActors = new Dictionary<Actor, float>();
-        private Dictionary<Vehicle, float> _lastHitVehicles = new Dictionary<Vehicle, float>();
-        private float _lastPointCaptureInteraction = 0;
+        public static KillfeedManager Instance { get; set; }
+
+        private GameObject _killfeedItemPrefab;
+        private Transform _feedItemsContainer;
+
+        private readonly List<CanvasGroup> _killfeedItemCanvasGroups = new List<CanvasGroup>();
+        private readonly List<CanvasGroup> _toDestroy = new List<CanvasGroup>();
+        private readonly List<KillfeedItem> _killfeedItems = new List<KillfeedItem>();
+
+        private readonly Dictionary<Actor, float> _hitActorsRegister = new Dictionary<Actor, float>();
+        private readonly List<Actor> _woundedActorsRegister = new List<Actor>();
+        private readonly List<Actor> _deadActorsRegister = new List<Actor>();
+
+        private readonly Dictionary<Vehicle, float> _hitVehiclesRegister = new Dictionary<Vehicle, float>();
+        private readonly List<Vehicle> _deadVehiclesRegister = new List<Vehicle>();
+
+        private float _lastCapturePointInteraction = 0;
+
+        public KillfeedItem[] KillfeedItems { get { return _killfeedItems.ToArray(); } }
 
         public void AddKillfeedItem(string message, int score)
         {
             KillfeedItem _item = new KillfeedItem(message, score);
             AddKillfeedItem(_item);
+        }
+        
+        public void CreateCustomKillfeedItem(string itemContent)
+        {
+            try
+            {
+                GameObject _item = Instantiate(_killfeedItemPrefab, _feedItemsContainer);
+                _item.transform.SetParent(_feedItemsContainer, false);
+                _item.SetActive(true);
+
+                _killfeedItemCanvasGroups.Add(_item.GetComponent<CanvasGroup>());
+                _item.transform.Find("Content").GetComponent<TMP_Text>().text = itemContent;
+            }
+            catch (Exception _exception)
+            {
+                Plugin.LogError("KillfeedManager: Could not create custom killfeed item! " + _exception);
+                return;
+            }
+
+            Invoke(nameof(DestroyFeed), GameConfiguration.killfeedItemLifetime);
         }
 
         public void AddKillfeedItem(KillfeedItem item)
@@ -68,23 +89,24 @@ namespace RiseOfWar
             _killfeedItems.Add(item);
         }
 
-        public void Setup(Transform _container, GameObject _item)
+        public void Setup(Transform container, GameObject item)
         {
-            if (_container == null)
+            if (container == null)
             {
-                Plugin.LogError("KillfeedManager: The provided container cannot be null! Assigning this object instead.");
-                _container = transform;
+                Plugin.LogWarning("KillfeedManager: The provided container cannot be null! Assigning this object instead...");
+                container = transform;
             }
 
-            if (_item == null)
+            if (item == null)
             {
                 Plugin.LogError("KillfeedManager: The provided item cannot be null!");
                 return;
             }
 
-            Plugin.Log("KillfeedManager: Successfully setup killfeed manager.");
-            _killfeedItemPrefab = _item;
-            _feedItemsContainer = _container;
+            _killfeedItemPrefab = item;
+            _feedItemsContainer = container;
+
+            Plugin.Log("KillfeedManager: Successfully set up Killfeed Manager.");
 
             Start();
         }
@@ -94,15 +116,19 @@ namespace RiseOfWar
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            AddListeners();
+            RegisterEvents();
 
-            Plugin.Log("KillfeedManager: Killfeed successfully initialized!");
+            Plugin.Log("KillfeedManager: Killfeed successfully started!");
         }
 
         private void Update()
         {
-            HandleLivingKillfeedItems();
+            UpdateLivingItems();
+            UpdateDestroyedItems();
+        }
 
+        private void UpdateDestroyedItems()
+        {
             if (_toDestroy.Count == 0)
             {
                 return;
@@ -138,7 +164,7 @@ namespace RiseOfWar
             canvasGroup.gameObject.SetActive(false);
         }
 
-        private void AddListeners()
+        private void RegisterEvents()
         {
             EventManager.onPlayerDealtDamage += OnPlayerDealtDamage;
             EventManager.onCapturePointInteraction += OnCapturePointInteraction;
@@ -150,11 +176,11 @@ namespace RiseOfWar
 
         private void OnCapturePointInteraction(OnCapturePointInteractionEvent _event)
         {
-            bool _containsPlayer = _event.actorsOnPoint.ToList().Contains(FpsActorController.instance.actor);
-            Plugin.Log("KillfeedManager: Contains player = " + _containsPlayer);
+            bool _containsPlayer = _event.actorsOnPoint.ToList().Contains(ReferenceManager.player);
 
-            if (Time.time < _lastPointCaptureInteraction + 0.5f)
+            if (Time.time < _lastCapturePointInteraction + GameConfiguration.capturePointCaptureDelay)
             {
+                Plugin.LogWarning($"KillfeedManager: Cannot capture point faster than every {GameConfiguration.capturePointCaptureDelay} seconds.");
                 return;
             }
 
@@ -177,16 +203,16 @@ namespace RiseOfWar
                 AddKillfeedItem(NEUTRALIZED_POINT_MESSAGE, NEUTRALIZED_POINT_XP_AMOUNT);
             }
 
-            _lastPointCaptureInteraction = Time.time;
+            _lastCapturePointInteraction = Time.time;
         }
 
         private void OnActorSpawn(OnActorSpawnEvent _event)
         {
             // When an actor considered as dead is respawning, we can check him off
             // the dead actors list, so we can handle killfeed items for it again.
-            if (_deadActors.Contains(_event.actor))
+            if (_deadActorsRegister.Contains(_event.actor))
             {
-                _deadActors.Remove(_event.actor);
+                _deadActorsRegister.Remove(_event.actor);
             }
         }
 
@@ -194,9 +220,9 @@ namespace RiseOfWar
         {
             // When a vehicle considered as dead is respawning, we can check him off
             // the dead vehicles list, so we can handle killfeed items for it again.
-            if (_deadVehicles.Contains(_event.vehicle))
+            if (_deadVehiclesRegister.Contains(_event.vehicle))
             {
-                _deadVehicles.Remove(_event.vehicle);
+                _deadVehiclesRegister.Remove(_event.vehicle);
             }
         }
 
@@ -204,21 +230,21 @@ namespace RiseOfWar
         {
             // If we already said this actor was dead, and thus treated it's killfeed item(s),
             // then we really don't need to make yet another killfeed item(s) for it.
-            if (_deadActors.Contains(_event.victim))
+            if (_deadActorsRegister.Contains(_event.victim))
             {
                 return;
             }
 
-            Actor _player = ActorManager.instance.player;
+            Actor _player = ReferenceManager.player;
             Vector3 _playerPosition = _player.CenterPosition();
             Vector3 _victimPosition = _event.victim.CenterPosition();
-            bool _isHeadshot = _event.damage.isCriticalHit;
+            bool _headshot = _event.damage.isCriticalHit;
 
             if (_event.damage.sourceActor == _player)
             {
                 // This is to avoid having multiple kill messages from the same actor dying
                 // over and over for some reason that I don't comprehend.
-                _deadActors.Add(_event.victim);
+                _deadActorsRegister.Add(_event.victim);
 
                 if (_event.victim == _player)
                 {
@@ -231,14 +257,14 @@ namespace RiseOfWar
                 {
                     AddKillfeedItem($"Team kill <#{GameConfiguration.RED_COLOR}>-10 XP</color>", -10);
 
-                    GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _isHeadshot);
+                    GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _headshot);
                     return;
                 }
 
                 SpawnPoint _nearestToPlayer = ActorManager.ClosestSpawnPoint(_playerPosition);
                 SpawnPoint _nearestToVictim = ActorManager.ClosestSpawnPoint(_victimPosition);
 
-                bool _isPlayerInPointProtect = Vector3.Distance(_playerPosition, _nearestToPlayer.transform.position) < _nearestToPlayer.protectRange + 10;
+                // bool _isPlayerInPointProtect = Vector3.Distance(_playerPosition, _nearestToPlayer.transform.position) < _nearestToPlayer.protectRange + 10;
                 bool _isPlayerInPointAttack = Vector3.Distance(_playerPosition, _nearestToPlayer.transform.position) < _nearestToPlayer.GetCaptureRange() + 10;
 
                 bool _isVictimInPointProtect = Vector3.Distance(_victimPosition, _nearestToVictim.transform.position) < _nearestToPlayer.protectRange + 10;
@@ -260,132 +286,119 @@ namespace RiseOfWar
                 string _victimName = _event.victim.name;
                 AddKillfeedItem($"Killed <#{GameConfiguration.RED_COLOR}>{_victimName}</color> <#{GameConfiguration.WHITE_COLOR}>3 XP</color>", 3);
 
-                GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _isHeadshot);
+                GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _headshot);
                 return;
             }
 
             if (_event.damage.sourceActor != null)
             {
-                GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _isHeadshot);
+                GlobalKillfeed.instance.AddKillItem(_event.victim, _event.damage.sourceActor, _event.damage.sourceWeapon, _headshot);
             }
             else
             {
-                _deadActors.Add(_event.victim);
+                _deadActorsRegister.Add(_event.victim);
                 AddKillfeedItem($"Suicide <#{GameConfiguration.RED_COLOR}>-1 XP</color>", -1);
                 GlobalKillfeed.instance.AddSuicideItem(_player);
             }
         }
 
-        private void OnPlayerDealtDamage(OnPlayerDealtDamageEvent _event)
+        private void DealDamageToVehicle(OnPlayerDealtDamageEvent _event, Vehicle vehicle)
         {
-            // If we're dealing with a vehicle...
-            if (_event.hit.actor == null)
+            if (_deadVehiclesRegister.Contains(vehicle))
             {
-                Vehicle _vehicle = _event.hit.vehicle;
+                return;
+            }
 
-                if (_vehicle == null)
-                {
-                    Plugin.LogError($"KillfeedManager: Actor and vehicle cannot be null at the same time!");
-                    return;
-                }
+            Weapon _sourceWeapon = _event.damage.sourceWeapon;
 
-                if (_deadVehicles.Contains(_vehicle))
-                {
-                    return;
-                }
+            if (_sourceWeapon == null)
+            {
+                return;
+            }
 
-                Weapon _sourceWeapon = _event.damage.sourceWeapon;
+            // If we deal negative damage, it means we're healing this vehicle.
+            if (_event.damage.healthDamage < 0)
+            {
+                // TODO: Add support for repairing vehicles in kill feed.
+                return;
+            }
 
-                if (_sourceWeapon == null)
-                {
-                    return;
-                }
+            if (_hitVehiclesRegister.ContainsKey(_event.hit.vehicle) && Time.time < _hitVehiclesRegister[_event.hit.vehicle] + 0.01f)
+            {
+                return;
+            }
 
-                // If we deal negative damage, it means we're healing this vehicle.
-                if (_event.damage.healthDamage < 0)
-                {
-                    // TODO: Add support for repairing vehicles in kill feed.
-                    return;
-                }
+            bool _isKillingVehicle = (vehicle.health - _event.damage.healthDamage) <= 0;
 
-                if (_lastHitVehicles.ContainsKey(_event.hit.vehicle) && Time.time < _lastHitVehicles[_event.hit.vehicle] + 0.01f)
-                {
-                    return;
-                }
+            float _healthPercentage = (vehicle.health / vehicle.maxHealth) * 100;
+            float _damagedHealthPercentage = (vehicle.health - _event.damage.healthDamage) / vehicle.maxHealth * 100;
 
-                bool _isKillingVehicle = (_vehicle.health - _event.damage.healthDamage) <= 0;
+            Plugin.Log($"KillfeedManager: Health percentage {_healthPercentage}. Damaged health percentage {_damagedHealthPercentage}.");
 
-                float _healthPercentage = (_vehicle.health / _vehicle.maxHealth) * 100;
-                float _damagedHealthPercentage = (_vehicle.health - _event.damage.healthDamage) / _vehicle.maxHealth * 100;
-
-                Debug.Log("Health percentage: " + _healthPercentage + "; Damaged health percentage: " + _damagedHealthPercentage);
-
-                bool[] _shouldShowDamage = new bool[]
-                {
+            bool[] _shouldShowDamage = new bool[]
+            {
                     _damagedHealthPercentage <= 85 && _healthPercentage > 85,
                     _damagedHealthPercentage <= 70 && _healthPercentage > 70,
                     _damagedHealthPercentage <= 55 && _healthPercentage > 55,
                     _damagedHealthPercentage <= 40 && _healthPercentage > 40,
                     _damagedHealthPercentage <= 25 && _healthPercentage > 25,
                     _damagedHealthPercentage <= 10 && _healthPercentage > 10
-                };
+            };
 
-                for (int _i = 0; _i < _shouldShowDamage.Length; _i++)
+            for (int _i = 0; _i < _shouldShowDamage.Length; _i++)
+            {
+                bool _part = _shouldShowDamage[_i];
+
+                if (!_part)
                 {
-                    bool _part = _shouldShowDamage[_i];
-
-                    if (!_part)
-                    {
-                        continue;
-                    }
-
-                    bool _isDestroyed = false;
-                    string _destroyed = _vehicle.GetAdditionalData().DestroyPart(out _isDestroyed);
-
-                    if (_isDestroyed)
-                    {
-                        AddKillfeedItem($"Destroyed <#{GameConfiguration.WHITE_COLOR}>{_destroyed}</color> <#{GameConfiguration.WHITE_COLOR}>1 XP</color>", 1);
-                    }
-                    else
-                    {
-                        AddKillfeedItem($"Penetrated <#{GameConfiguration.WHITE_COLOR}>Armor</color> <#{GameConfiguration.WHITE_COLOR}>1 XP</color>", 1);
-                    }
-
-                    _shouldShowDamage[_i] = false;
-                    break;
+                    continue;
                 }
 
-                if (_lastHitVehicles.ContainsKey(_event.hit.vehicle))
+                bool _isDestroyed = false;
+                string _destroyed = vehicle.GetAdditionalData().DestroyPart(out _isDestroyed);
+
+                if (_isDestroyed)
                 {
-                    _lastHitVehicles[_event.hit.vehicle] = Time.time;
+                    AddKillfeedItem($"Destroyed <#{GameConfiguration.WHITE_COLOR}>{_destroyed}</color> <#{GameConfiguration.WHITE_COLOR}>1 XP</color>", 1);
                 }
                 else
                 {
-                    _lastHitVehicles.Add(_event.hit.vehicle, Time.time);
+                    AddKillfeedItem($"Penetrated <#{GameConfiguration.WHITE_COLOR}>Armor</color> <#{GameConfiguration.WHITE_COLOR}>1 XP</color>", 1);
                 }
 
-                Debug.Log("Is Killing Vehicle: " + _isKillingVehicle);
+                _shouldShowDamage[_i] = false;
+                break;
+            }
 
-                if (_isKillingVehicle)
-                {
-                    AddKillfeedItem($"Destroyed <#{GameConfiguration.WHITE_COLOR}>Vehicle</color> <#{GameConfiguration.WHITE_COLOR}>20 XP</color>", 20);
-                    _deadVehicles.Add(_vehicle);
+            if (_hitVehiclesRegister.ContainsKey(_event.hit.vehicle))
+            {
+                _hitVehiclesRegister[_event.hit.vehicle] = Time.time;
+            }
+            else
+            {
+                _hitVehiclesRegister.Add(_event.hit.vehicle, Time.time);
+            }
 
-                    return;
-                }
+            Plugin.Log($"KillfeedManager: Is killing vehicle = {_isKillingVehicle}");
+
+            if (_isKillingVehicle)
+            {
+                AddKillfeedItem($"Destroyed <#{GameConfiguration.WHITE_COLOR}>Vehicle</color> <#{GameConfiguration.WHITE_COLOR}>20 XP</color>", 20);
+                _deadVehiclesRegister.Add(vehicle);
 
                 return;
             }
+        }
 
-            // If we're dealing with an actor...
-
+        private void DealDamageToActor(OnPlayerDealtDamageEvent _event)
+        {
             // We don't want to hit twice the same actor in the same iteration.
-            if (_woundedActors.Contains(_event.hit.actor))
+            if (_woundedActorsRegister.Contains(_event.hit.actor))
             {
                 return;
             }
 
-            if (_lastHitActors.ContainsKey(_event.hit.actor) && Time.time < _lastHitActors[_event.hit.actor] + 1.25f)
+            if (_hitActorsRegister.ContainsKey(_event.hit.actor) && Time.time < _hitActorsRegister[_event.hit.actor] + 1.25f)
             {
                 return;
             }
@@ -398,27 +411,49 @@ namespace RiseOfWar
 
             string _victimName = _event.hit.actor.name;
             AddKillfeedItem($"Wounded <#{GameConfiguration.WHITE_COLOR}>{_victimName}</color> <#{GameConfiguration.WHITE_COLOR}>2 XP</color>", 2);
-            _woundedActors.Add(_event.hit.actor);
-
-            if (_lastHitActors.ContainsKey(_event.hit.actor))
+            
+            if (_hitActorsRegister.ContainsKey(_event.hit.actor))
             {
-                _lastHitActors[_event.hit.actor] = Time.time;
+                _hitActorsRegister[_event.hit.actor] = Time.time;
             }
             else
             {
-                _lastHitActors.Add(_event.hit.actor, Time.time);
+                _hitActorsRegister.Add(_event.hit.actor, Time.time);
             }
+         
+            _woundedActorsRegister.Add(_event.hit.actor);
+        }
+
+        private void OnPlayerDealtDamage(OnPlayerDealtDamageEvent _event)
+        {
+            // If we're dealing with a vehicle...
+            if (_event.hit.actor == null)
+            {
+                Vehicle _vehicle = _event.hit.vehicle;
+
+                if (_vehicle == null)
+                {
+                    Plugin.LogWarning($"KillfeedManager: Cannot deal damage to neither actor nor vehicles at the same time.");
+                    return;
+                }
+
+                DealDamageToVehicle(_event, _vehicle);
+                return;
+            }
+
+            // If we're dealing with an actor...
+            DealDamageToActor(_event);
 
             return;
         }
 
-        private void HandleLivingKillfeedItems()
+        private void UpdateLivingItems()
         {
             if (_killfeedItems.Count <= 0)
             {
                 // If we have treated every items, we can clear the wounded actors
                 // list so we allow the player to get XP for hitting an actor again.
-                _woundedActors.Clear();
+                _woundedActorsRegister.Clear();
                 return;
             }
 
@@ -427,37 +462,16 @@ namespace RiseOfWar
             string _message = _item.message;
             int _score = _item.score;
 
-            FpsActorController.instance.AddXP(_score);
-            CreateCustomFeed(_message);
+            ReferenceManager.player.AddScore(_score);
+            CreateCustomKillfeedItem(_message);
 
             _killfeedItems.RemoveAt(0);
         }
 
         private void DestroyFeed()
         {
-            _toDestroy.Add(_feedItems[0]);
-            _feedItems.RemoveAt(0);
-        }
-
-        public void CreateCustomFeed(string _feedContent)
-        {
-            try
-            {
-                GameObject _newItem = Instantiate(_killfeedItemPrefab, _feedItemsContainer);
-                _newItem.transform.SetParent(_feedItemsContainer, false);
-                _newItem.SetActive(true);
-                _feedItems.Add(_newItem.GetComponent<CanvasGroup>());
-
-                _feedContent = new System.Text.StringBuilder(_feedContent).ToString();
-                _newItem.transform.Find("Content").GetComponent<TMP_Text>().text = _feedContent;
-            }
-            catch (Exception _exception)
-            {
-                Plugin.LogError("KillfeedManager: Couldn't create custom feed! " + _exception);
-                return;
-            }
-
-            Invoke(nameof(DestroyFeed), 5f);
+            _toDestroy.Add(_killfeedItemCanvasGroups[0]);
+            _killfeedItemCanvasGroups.RemoveAt(0);
         }
     }
 }

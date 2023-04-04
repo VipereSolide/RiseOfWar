@@ -16,7 +16,16 @@ namespace RiseOfWar
         public static string defaultHurtPath = "/Resources/Sounds/Damage/Pain/";
         public static string defaultMeshModificationsPath = "/Resources/Data/Mesh Modifications/";
 
+        public static Color32 hitmarkerKillColor = Color.red;
+        public static Color32 hitmarkerNormalHitColor = Color.white;
+
         public static readonly int interractableLayer = 9;
+
+        public static readonly float actorDamageInvulnerabilityTime = 0.05f;
+
+        public static readonly float capturePointCaptureDelay = 0.2f;
+
+        public static readonly float killfeedItemLifetime = 5f;
 
         /// <summary>
         /// Represents the field of view of the camera when any unscoped weapon is aiming.

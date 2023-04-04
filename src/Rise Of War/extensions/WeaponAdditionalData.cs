@@ -6,17 +6,21 @@ namespace RiseOfWar
     [Serializable]
     public class WeaponAdditionalData
     {
-        public Transform aimingAnchor;
-        public Transform recoilAnchor;
-        public AudioSource source { get; set; }
-        public bool isCustomWeapon;
-        public bool wasAiming;
         public WeaponModifications modifications;
         public bool hasCustomDisplayName;
-        public GameObject projectile;
         public float damageToVehicles;
-
+        public Transform aimingAnchor;
+        public Transform recoilAnchor;
+        public GameObject projectile;
         public float currentConefire;
+        public bool isCustomWeapon;
+        public bool wasAiming;
+
+        public Animation animation;
+        public string fireAnimationName;
+        public string reloadAnimationName;
+        public string idleAnimationName;
+        public string unholsterAnimationName;
 
         public void InitWeaponModifications()
         {
