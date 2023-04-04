@@ -14,7 +14,7 @@ namespace RiseOfWar
 
         [HarmonyPatch(typeof(Weapon), "Awake")]
         [HarmonyPostfix]
-        private static void PatchAwake(Weapon __instance)
+        private static void AwakePatch(Weapon __instance)
         {
             if (__instance.UserIsAI())
             {
@@ -36,7 +36,7 @@ namespace RiseOfWar
 
         [HarmonyPatch(typeof(Weapon), "Start")]
         [HarmonyPostfix]
-        private static void PatchStart(Weapon __instance)
+        private static void StartPatch(Weapon __instance)
         {
             Plugin.Log($"WeaponPatcher: Initializing weapon \"{__instance.name}\"...");
 
@@ -58,8 +58,9 @@ namespace RiseOfWar
 
             // __instance.AddWeaponAnimationSetup();
 
-            CreateAimingAnchor(__instance);
-            CreateRecoilAnchor(__instance);
+            __instance.DisableWeaponScriptedBehaviours();
+            __instance.CreateAimingAnchor();
+            __instance.CreateRecoilAnchor();
 
             __instance.configuration = ResourceManager.Instance.GetWeaponConfigurationFromProperties(__instance, __instance.weaponProperties());
             __instance.ResetSetup();
@@ -104,7 +105,6 @@ namespace RiseOfWar
             }
         }
 
-
         [HarmonyPatch(typeof(Weapon), "LateUpdate")]
         [HarmonyPrefix]
         private static bool LateUpdatePatch(Weapon __instance)
@@ -122,47 +122,9 @@ namespace RiseOfWar
             return false;
         }
 
-        private static void CreateAimingAnchor(Weapon __instance)
-        {
-            if (__instance == null)
-            {
-                Plugin.LogError("WeaponPatcher: Cannot initialize aiming anchor for null weapon!");
-                return;
-            }
-
-            Transform _aimingAnchor = new GameObject($"Aiming Anchor ({__instance.name})").transform;
-            _aimingAnchor.SetParent(__instance.transform.parent);
-            _aimingAnchor.localPosition = Vector3.zero;
-            _aimingAnchor.localRotation = Quaternion.identity;
-
-            __instance.GetAdditionalData().aimingAnchor = _aimingAnchor;
-            __instance.transform.SetParent(_aimingAnchor.transform, true);
-
-            Plugin.Log($"WeaponPatcher: Successfully initialized aiming anchor for weapon \"{__instance.name}\"!");
-        }
-
-        private static void CreateRecoilAnchor(Weapon __instance)
-        {
-            if (__instance == null)
-            {
-                Plugin.LogError("WeaponPatcher: Cannot initialize recoil anchor for null weapon!");
-                return;
-            }
-
-            Transform _recoilAnchor = new GameObject($"Recoil Anchor ({__instance.name})").transform;
-            _recoilAnchor.SetParent(__instance.transform.parent);
-            _recoilAnchor.localPosition = Vector3.zero;
-            _recoilAnchor.localRotation = Quaternion.identity;
-
-            __instance.GetAdditionalData().recoilAnchor = _recoilAnchor;
-            __instance.transform.SetParent(_recoilAnchor.transform, true);
-
-            Plugin.Log($"WeaponPatcher: Successfully initialized recoil anchor for weapon \"{__instance.name}\"!");
-        }
-
         [HarmonyPatch(typeof(Weapon), "Update")]
         [HarmonyPostfix]
-        private static void PatchUpdate(Weapon __instance)
+        private static void UpdatePatch(Weapon __instance)
         {
             if (__instance == null || __instance.UserIsAI() || WeaponRegistry.IsCustomWeapon(__instance) == false)
             {
@@ -176,17 +138,6 @@ namespace RiseOfWar
                 return;
             }
 
-            foreach (Lua.ScriptedBehaviour _scriptedBehaviour in __instance.GetComponents<Lua.ScriptedBehaviour>())
-            {
-                if (_scriptedBehaviour.enabled == false)
-                {
-                    continue;
-                }
-
-                Plugin.Log($"WeaponPatcher: Found scripted behaviour on weapon \"{WeaponRegistry.GetRealName(__instance)}\"...");
-                _scriptedBehaviour.enabled = false;
-            }
-
             __instance.HandleCurrentConefire();
             __instance.HandleAimingAnchor();
             __instance.HandleRecoil();
@@ -196,7 +147,7 @@ namespace RiseOfWar
 
         [HarmonyPatch(typeof(Weapon), "SpawnProjectile")]
         [HarmonyPrefix]
-        private static bool PatchSpawnProjectile(Weapon __instance, ref Projectile __result, ref Vector3 direction, ref Vector3 muzzlePosition)
+        private static bool SpawnProjectilePatch(Weapon __instance, ref Projectile __result, ref Vector3 direction, ref Vector3 muzzlePosition)
         {
             // I don't want the AIs to shoot from the player's eyes.
             if (__instance.UserIsAI())
@@ -269,7 +220,7 @@ namespace RiseOfWar
 
         [HarmonyPatch(typeof(Weapon), "SetAiming")]
         [HarmonyPrefix]
-        private static bool PatchSetAiming(Weapon __instance, bool aiming)
+        private static bool SetAimingPatch(Weapon __instance, bool aiming)
         {
             // If the user is a normal AI, execute the default method instead.
             if (__instance.UserIsAI())
@@ -345,7 +296,7 @@ namespace RiseOfWar
 
             Vector3 _fireDirection = PlayerFpParent.instance.fpCamera.transform.forward;
 
-            float _lastFiredTimestamp = (float)Traverse.Create(__instance).Field("lastFiredTimestamp").GetValue();
+            float _lastFiredTimestamp = __instance.GetProperty<float>("lastFiredTimestamp");
 
             if (_lastFiredTimestamp + __instance.configuration.cooldown > Time.time || __instance.ammo <= 0)
             {
@@ -354,7 +305,7 @@ namespace RiseOfWar
 
             __instance.PlayFireSound();
 
-            byte _currentMuzzleIndex = (byte)Traverse.Create(__instance).Field("currentMuzzleIndex").GetValue();
+            byte _currentMuzzleIndex = __instance.GetProperty<byte>("currentMuzzleIndex");
 
             __instance.onFire.Invoke();
             if (__instance.onFireScriptable != null && __instance.onFireScriptable.isConsumed)
@@ -367,7 +318,7 @@ namespace RiseOfWar
                 __instance.user.Highlight(4f);
             }
 
-            Traverse.Create(__instance).Field("lastFiredTimestamp").SetValue(Time.time);
+            __instance.SetProperty("lastFiredTimestamp", Time.time);
 
             if (__instance.activeAnimator())
             {
@@ -413,7 +364,7 @@ namespace RiseOfWar
 
             if (!__instance.configuration.auto)
             {
-                Traverse.Create(__instance).Field("hasFiredSingleRoundThisTrigger").SetValue(true);
+                __instance.SetProperty("hasFiredSingleRoundThisTrigger", true);
             }
 
             if (__instance.configuration.loud && __instance.user != null && !__instance.IsMeleeWeapon())
@@ -475,6 +426,9 @@ namespace RiseOfWar
         {
             __instance.PlayAnimation(WeaponAnimationType.Reload, true);
             PlayerUI.instance.SetWeaponCustomDisplayName("RELOADING");
+
+            // Reset conefire on reload.
+            __instance.GetAdditionalData().currentConefire = 0;
         }
 
         [HarmonyPatch(typeof(Weapon), "ReloadDone")]
@@ -490,7 +444,7 @@ namespace RiseOfWar
         {
             try
             {
-            __instance.PlayAnimation(WeaponAnimationType.Draw, true);
+                __instance.PlayAnimation(WeaponAnimationType.Draw, true);
             }
             catch { }
         }

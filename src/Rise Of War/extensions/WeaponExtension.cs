@@ -11,6 +11,58 @@ namespace RiseOfWar
 
     public static partial class WeaponExtension
     {
+        public static void DisableWeaponScriptedBehaviours(this Weapon weapon)
+        {
+            foreach (Lua.ScriptedBehaviour _scriptedBehaviour in weapon.GetComponents<Lua.ScriptedBehaviour>())
+            {
+                if (_scriptedBehaviour.enabled == false)
+                {
+                    continue;
+                }
+
+                Plugin.Log($"WeaponPatcher: Found scripted behaviour on weapon \"{WeaponRegistry.GetRealName(weapon)}\"...");
+                _scriptedBehaviour.enabled = false;
+            }
+        }
+
+        public static void CreateAimingAnchor(this Weapon weapon)
+        {
+            if (weapon == null)
+            {
+                Plugin.LogError("WeaponPatcher: Cannot initialize aiming anchor for null weapon!");
+                return;
+            }
+
+            Transform _aimingAnchor = new GameObject($"Aiming Anchor ({weapon.name})").transform;
+            _aimingAnchor.SetParent(weapon.transform.parent);
+            _aimingAnchor.localPosition = Vector3.zero;
+            _aimingAnchor.localRotation = Quaternion.identity;
+
+            weapon.GetAdditionalData().aimingAnchor = _aimingAnchor;
+            weapon.transform.SetParent(_aimingAnchor.transform, true);
+
+            Plugin.Log($"WeaponPatcher: Successfully initialized aiming anchor for weapon \"{weapon.name}\"!");
+        }
+
+        public static void CreateRecoilAnchor(this Weapon weapon)
+        {
+            if (weapon == null)
+            {
+                Plugin.LogError("WeaponPatcher: Cannot initialize recoil anchor for null weapon!");
+                return;
+            }
+
+            Transform _recoilAnchor = new GameObject($"Recoil Anchor ({weapon.name})").transform;
+            _recoilAnchor.SetParent(weapon.transform.parent);
+            _recoilAnchor.localPosition = Vector3.zero;
+            _recoilAnchor.localRotation = Quaternion.identity;
+
+            weapon.GetAdditionalData().recoilAnchor = _recoilAnchor;
+            weapon.transform.SetParent(_recoilAnchor.transform, true);
+
+            Plugin.Log($"WeaponPatcher: Successfully initialized recoil anchor for weapon \"{weapon.name}\"!");
+        }
+
         public static string GetWeaponAnimationName(this Weapon weapon, WeaponAnimationType animation)
         {
             WeaponAdditionalData _additionalData = weapon.GetAdditionalData();
