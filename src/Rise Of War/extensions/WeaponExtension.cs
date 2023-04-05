@@ -216,7 +216,14 @@ namespace RiseOfWar
                 return;
             }
 
-            if (_additionalData.currentConefire > 0)
+            // Reset current cone fire in case the weapon hasn't been shot since more than 1 second.
+            float _lastFiredTimestamp = weapon.GetProperty<float>("lastFiredTimestamp");
+            if (Time.time > _lastFiredTimestamp + 1)
+            {
+                _additionalData.currentConefire = 0;
+            }
+
+            if (_additionalData.currentConefire > 0 && !FpsActorController.instance.Fire())
             {
                 _additionalData.currentConefire -= Time.deltaTime * _weaponProperties.GetFloat(WeaponXMLProperties.CONE_CONTRACTION_PER_SECOND);
 
@@ -350,12 +357,10 @@ namespace RiseOfWar
                 return;
             }
 
-            // ((AudioSource)Traverse.Create(_weapon).Field("audio").GetValue()).volume = 0;
-
             AudioClip[] _fireAudioClips = _weaponProperties.soundRegisters[0].clips.ToArray();
             int _randomIndex = Random.Range(0, _fireAudioClips.Length);
 
-            // _weapon.GetAdditionalData().source.PlayOneShot(_clips[_i]);
+            Plugin.Log("WeaponExtension: Volume = " + SoundManager.instance.Source.volume);
             SoundManager.instance.ForcePlaySound(_fireAudioClips[_randomIndex]);
 
             WeaponPatcher.lastPlayedFireAudioClipIndex = _randomIndex;

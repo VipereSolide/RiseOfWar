@@ -386,8 +386,35 @@ namespace RiseOfWar
 
             if (_projectile.armorDamage != Vehicle.ArmorRating.AntiTank)
             {
+                Plugin.Log("ResourceManager: Weapon should receive projectile armor data patch.");
+
                 _projectile.autoAssignArmorDamage = false;
                 _projectile.armorDamage = Vehicle.ArmorRating.HeavyArms;
+                _baseConfiguration.diffGroundVehicles = Weapon.Difficulty.Easy;
+
+                _projectile.configuration.passThroughPenetrateLayer = true;
+                _projectile.configuration.piercing = true;
+            }
+
+            if (weaponProperties.projectile.HasParam(WeaponXMLProperties.Projectile.IS_LOUD))
+            {
+                _baseConfiguration.loud = weaponProperties.projectile.GetBool(WeaponXMLProperties.Projectile.IS_LOUD);
+            }
+
+            if (weaponProperties.projectile.HasParam(WeaponXMLProperties.Projectile.DISABLE_REFLECTION_SOUND))
+            {
+                weapon.GetAdditionalData().disableReflectionSound = weaponProperties.projectile.GetBool(WeaponXMLProperties.Projectile.DISABLE_REFLECTION_SOUND);
+            }
+
+            if (weaponProperties.projectile.HasParam(WeaponXMLProperties.Projectile.REFLECTION_SOUND))
+            {
+                Plugin.Log("ResourceManager: Weapon has custom reflection sound property.");
+
+                string _reflectionSoundToString = weaponProperties.projectile.GetString(WeaponXMLProperties.Projectile.REFLECTION_SOUND);
+                Weapon.ReflectionSound _reflectionSound = (Weapon.ReflectionSound)Enum.Parse(typeof(Weapon.ReflectionSound), _reflectionSoundToString); ;
+
+                Plugin.Log($"ResourceManager: Custom reflection sound property = \"{_reflectionSound}\" (from string \"{_reflectionSoundToString}\").");
+                weapon.reflectionSound = _reflectionSound;
             }
 
             if (weaponProperties.damage.HasParam(WeaponXMLProperties.Damage.VEHICLE_DAMAGE))

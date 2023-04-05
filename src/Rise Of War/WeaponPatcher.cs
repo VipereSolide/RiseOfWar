@@ -349,7 +349,7 @@ namespace RiseOfWar
 
             __instance.OnAmmoChanged();
 
-            if (__instance.reflectionVolume > 0f && __instance.reflectionSound != Weapon.ReflectionSound.None)
+            if (__instance.reflectionVolume > 0f && __instance.reflectionSound != Weapon.ReflectionSound.None && _additionalData.disableReflectionSound == false)
             {
                 GameManager.PlayReflectionSound(
                     __instance.UserIsPlayer(),

@@ -14,6 +14,8 @@ namespace RiseOfWar
         private AudioSource _source;
         private float _playingSoundCooldown = 0;
 
+        public AudioSource Source { get { return _source; } }
+
         private void Awake()
         {
             instance = this;

@@ -15,6 +15,7 @@ namespace RiseOfWar
         public float currentConefire;
         public bool isCustomWeapon;
         public bool wasAiming;
+        public bool disableReflectionSound;
 
         public Animation animation;
         public string fireAnimationName;

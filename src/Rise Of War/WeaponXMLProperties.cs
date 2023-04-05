@@ -98,6 +98,10 @@ namespace RiseOfWar
         {
             public static readonly string DAMAGE_MULTIPLIER = "damageMultiplier";
             public static readonly string VELOCITY = "velocity";
+
+            public static readonly string IS_LOUD = "isLoud";
+            public static readonly string DISABLE_REFLECTION_SOUND = "disableReflectionSound";
+            public static readonly string REFLECTION_SOUND = "reflectionSound";
         }
 
     }
